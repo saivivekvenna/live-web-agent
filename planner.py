@@ -90,5 +90,5 @@ def generate_navigation_plan(task_description: str) -> str:
     except Exception as e:
         return f"Error: {e}"
 
-if __name__ == "__main__":
-    print(generate_navigation_plan("Create a database in Notion"))
+# if __name__ == "__main__":
+#     print(generate_navigation_plan("Create a database in Notion"))
