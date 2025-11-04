@@ -1,8 +1,9 @@
 # planner.py
 from openai import OpenAI
-import json, re
+import json, re, textwrap
 
 client = OpenAI()
+
 
 # ------------------------------------------------------------
 # 1. High-level planner: like ChatGPT explaining to a human
@@ -12,7 +13,7 @@ def generate_navigation_plan(task_description: str) -> str:
     Uses GPT to generate a high-level navigation plan for a given web task.
     Example input: "Create a project in Linear"
     """
-    prompt = f"""
+    prompt_template = """
     You are the NLP Task Planner in a multi-agent automation system.
 
     Your job: given a natural-language user request, generate a concise step-by-step
@@ -21,11 +22,17 @@ def generate_navigation_plan(task_description: str) -> str:
     You do NOT execute the steps — you only describe the intended flow so a Playwright
     executor can later perform and screenshot each action.
 
-    Produce a structured plan that makes the goal explicit at both the task and step level.
+    The purpose of the application you are part of is it should automatically navigate the live app and capture screenshots of each UI state in the workflow.
+    The user will input simple questions such as : "How do I create a database in Notion" or "How do I create a project in linear". Your response to these type of questions should firstly be a generinic response,. Assume user hasnt opened the application page yet.
+
+    Using your knowledge of how you would normally respond to the given question, you shuold then produce a structured plan that makes the goal explicit at both the task and step level.
     The output must highlight *what success looks like* so that another agent can check progress.
+
+    Rememeber everything you will be outputing should be an "how to guide". Don't be scared to type in/choose fields as examples for the sake of showing how the task is to be done. 
 
     Each output must include:
     - "task": restate the task in your own words.
+    - "solution": solution to the task as a normal ChatGPT response (respond how you would normally respond to these questions)
     - "overall_goal": single sentence describing the desired end state.
     - "url": the best starting webpage for the task.
     - "steps": ordered list where each step contains:
@@ -42,12 +49,13 @@ def generate_navigation_plan(task_description: str) -> str:
 
     Return valid JSON only following this structure:
 
-    {{
+    {
       "task": "string",
+      "solution": "string",
       "overall_goal": "string",
       "url": "string",
       "steps": [
-        {{
+        {
           "id": 1,
           "intent": "string",
           "action": "string",
@@ -55,37 +63,60 @@ def generate_navigation_plan(task_description: str) -> str:
           "success_criteria": "string",
           "description": "string",
           "state_capture": "string"
-        }}
+        }
       ]
-    }}
+    }
 
     ---
 
     Example 1
     Input: "Book a hotel room in Paris for next weekend."
     Output:
-    {{
+    {
       "task": "Book a weekend hotel stay in Paris.",
+      "solution": "Go to a booking site like Booking.com, set the destination to Paris, choose next weekend dates, adjust guests, then review and confirm a hotel booking that meets your needs.",
       "overall_goal": "Have a Paris hotel selected with dates set for next weekend.",
       "url": "https://www.booking.com",
       "steps": [
-        {{"id": 1, "intent": "open booking site", "action": "navigate", "goal": "Booking.com homepage visible", "success_criteria": "Hero search form with destination input appears", "description": "Load the Booking.com homepage to begin the search", "state_capture": "Homepage with search module"}},
-        {{"id": 2, "intent": "search hotels", "action": "type", "goal": "Destination populated with Paris", "success_criteria": "Search box shows 'Paris'", "description": "Type Paris into the destination field", "state_capture": "Search widget filled with Paris"}},
-        {{"id": 3, "intent": "set stay dates", "action": "select", "goal": "Next weekend dates selected", "success_criteria": "Date picker displays the correct Friday-Sunday range", "description": "Choose next weekend in the date picker", "state_capture": "Date picker highlighting chosen range"}},
-        {{"id": 4, "intent": "view search results", "action": "click", "goal": "Hotel results list appears", "success_criteria": "Result cards with prices are rendered", "description": "Submit the search and wait for results", "state_capture": "Results list showing hotel cards"}},
-        {{"id": 5, "intent": "pick best option", "action": "click", "goal": "Top-rated hotel details open", "success_criteria": "Hotel detail page with book button visible", "description": "Select the highest rated hotel from the results", "state_capture": "Hotel detail page with book CTA"}}
+        {
+          "id": 1,
+          "intent": "open booking site",
+          "action": "navigate",
+          "goal": "Booking.com homepage visible",
+          "success_criteria": "Hero search form with destination, dates, and guests inputs is visible",
+          "description": "Open the Booking.com homepage in the browser to start the hotel search",
+          "state_capture": "Homepage with main search module"
+        },
+        {
+          "id": 2,
+          "intent": "configure search",
+          "action": "type",
+          "goal": "Search form populated with Paris and next weekend dates",
+          "success_criteria": "Destination input shows Paris and the date picker highlights the selected range",
+          "description": "Enter Paris, set check-in and check-out for next weekend, choose the right number of guests, then start the search",
+          "state_capture": "Search form completed before submitting"
+        }
       ]
-    }}
+    }
 
     Now, generate the plan for this user request:
-    "{task_description}"
+    "<<TASK_DESCRIPTION>>"
     """
+
+    prompt = (
+        textwrap.dedent(prompt_template)
+        .strip()
+        .replace("<<TASK_DESCRIPTION>>", task_description)
+    )
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are the NLP Task Planner in a multi-agent automation system."},
+                {
+                    "role": "system",
+                    "content": "You are the NLP Task Planner in a multi-agent automation system.",
+                },
                 {"role": "user", "content": prompt},
             ],
             temperature=0.4,
@@ -96,6 +127,8 @@ def generate_navigation_plan(task_description: str) -> str:
 
     except Exception as e:
         return f"Error: {e}"
+
+
 def _extract_first_json_block(text: str) -> str:
     cleaned = re.sub(r"```(?:json)?|```", "", text, flags=re.IGNORECASE).strip()
     m = re.search(r"\{[\s\S]*\}", cleaned)
@@ -103,9 +136,7 @@ def _extract_first_json_block(text: str) -> str:
 
 
 def low_level_plan(
-    high_level_step: dict,
-    page_context: dict | str,
-    recall_context: list = None
+    high_level_step: dict, page_context: dict | str, recall_context: list = None
 ) -> str:
     """
     DOM-aware reasoning planner that *thinks before acting*.
@@ -133,7 +164,9 @@ def low_level_plan(
     recall_text = ""
     if recall_context:
         try:
-            recall_text = "\nRecent context:\n" + json.dumps(recall_context[-5:], indent=2)
+            recall_text = "\nRecent context:\n" + json.dumps(
+                recall_context[-5:], indent=2
+            )
         except Exception:
             recall_text = "\nRecent context: <unserializable>"
 
@@ -294,7 +327,10 @@ def low_level_plan(
             resp = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a DOM reasoning and automation expert. Output pure JSON."},
+                    {
+                        "role": "system",
+                        "content": "You are a DOM reasoning and automation expert. Output pure JSON.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
@@ -306,11 +342,14 @@ def low_level_plan(
         except Exception:
             pass
 
-    return json.dumps({
-        "action": "replan",
-        "reasoning": "Low-level planner failed twice to produce valid JSON.",
-        "confidence": 0.0
-    }, indent=2)
+    return json.dumps(
+        {
+            "action": "replan",
+            "reasoning": "Low-level planner failed twice to produce valid JSON.",
+            "confidence": 0.0,
+        },
+        indent=2,
+    )
 
 
 def evaluate_goal_completion(
@@ -322,7 +361,7 @@ def evaluate_goal_completion(
     page_title: str = "",
     rendered_text: str = "",
     actionables: list = None,
-    meta: dict = None
+    meta: dict = None,
 ) -> dict:
     """
     Uses an evaluation agent to determine whether the provided DOM snapshot
@@ -333,13 +372,15 @@ def evaluate_goal_completion(
             "status": "unknown",
             "confidence": 0.0,
             "feedback": "No goal provided for evaluation.",
-            "evidence": ""
+            "evidence": "",
         }
 
     recall_text = ""
     if recall_context:
         try:
-            recall_text = "\nRecent context:\n" + json.dumps(recall_context[-5:], indent=2)
+            recall_text = "\nRecent context:\n" + json.dumps(
+                recall_context[-5:], indent=2
+            )
         except Exception:
             recall_text = "\nRecent context: <unserializable>"
 
@@ -419,7 +460,10 @@ def evaluate_goal_completion(
         resp = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You evaluate goal completion for an autonomous agent. Output strict JSON."},
+                {
+                    "role": "system",
+                    "content": "You evaluate goal completion for an autonomous agent. Output strict JSON.",
+                },
                 {"role": "user", "content": prompt},
             ],
             temperature=0.0,
@@ -432,5 +476,5 @@ def evaluate_goal_completion(
             "status": "unknown",
             "confidence": 0.0,
             "feedback": f"Goal evaluator error: {e}",
-            "evidence": ""
+            "evidence": "",
         }
