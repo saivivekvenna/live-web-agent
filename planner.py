@@ -170,9 +170,9 @@ def low_level_plan(
         except Exception:
             recall_text = "\nRecent context: <unserializable>"
 
-    DOM_LIMIT = 15000
-    TEXT_LIMIT = 4000
-    CLICK_LIMIT = 12
+    DOM_LIMIT = 35000
+    TEXT_LIMIT = 6000
+    CLICK_LIMIT = 30
     dom_trunc = dom_snapshot[:DOM_LIMIT]
 
     rendered_excerpt = (rendered_text or "")[:TEXT_LIMIT]
@@ -190,7 +190,7 @@ def low_level_plan(
 
     click_summary = ""
     if click_map:
-        click_summary = _serialize(click_map[:CLICK_LIMIT], limit=2000)
+        click_summary = _serialize(click_map[:CLICK_LIMIT], limit=5000)
 
     accessibility_summary = ""
     if accessibility:
@@ -214,7 +214,17 @@ def low_level_plan(
     - If a required element (like a form field or button) isn’t visible, reason what the *likely prerequisite* is and proceed with the new action.
     (e.g., "You must sign in first" → click “Sign in” or “Sign up” link).
     - Only choose one concrete action at a time.
+    - Before deciding, mentally rank up to three actionable candidates whose text or aria-label align with the goal keywords (e.g., New/Create/Add for creation tasks) and choose the highest-confidence match.
     - Prefer the most reliable and obvious next UI step.
+    - Ensure the selector you output is something Playwright can resolve (CSS, role, or text) and use `nth` when you need a specific instance.
+    - Refer to the "Known actionable elements" and "Visible text blocks" inventories when choosing selectors. Reuse the exact attributes shown there (text, aria-label, role, css_path) instead of inventing new ones.
+    - When using attribute selectors, wrap the value in double quotes (e.g., `[aria-label="Workspace"]`) so embedded apostrophes do not break the CSS.
+    - If a `css_path` is supplied for the element you want, prefer using that path (optionally with `nth`) because it maps directly to the live DOM.
+    - Favor Playwright text selectors such as `text="Database"` or `div:has-text("Database")` when only text is available and no role/aria attribute is present.
+    - Only include `wait_for` or `assert_selector` when you can cite a DOM cue (from the current snapshot or stated success criteria) that should appear afterward; otherwise leave them out.
+    - Before finalizing the JSON, double-check that every attribute you cite (role, aria-label, etc.) is explicitly present in the DOM excerpt or actionable inventory.
+    - When the main canvas already shows a creation surface (e.g., a heading like "New page" with quick-start chips such as Database/Form/Templates), treat that as progress and interact with the relevant quick-start control instead of re-triggering navigation.
+    - If a dropdown menu listing creation options (Page, Database, Templates, etc.) is open, select the matching item directly (e.g., `div[role='menu'] >> text='Database'`) or dismiss it with Escape before acting elsewhere.
 
     Do not output any explanation outside JSON. Output only a valid JSON object matching the schema below.
 
@@ -257,9 +267,16 @@ def low_level_plan(
     "value": "string | optional input or key",
     "key": "string | key to press (for press actions)",
     "wait_for": "string | selector expected to appear after the action",
+    "wait_state": "string | optional Playwright wait state (visible|attached|detached|hidden)",
     "assert_selector": "string | selector that confirms success",
     "expect_navigation": true/false,
     "timeout": 8000,
+    "force": true/false,
+    "nth": 0,
+    "button": "left|right|middle",
+    "click_count": 1,
+    "modifiers": ["Shift","Meta"],
+    "ensure_visible": true/false,
     "target_goal": "string | the immediate observable result this action aims to achieve",
     "message": "string | instruction for human intervention when action=user_prompt",
     "confidence": 0.0-1.0,
@@ -271,9 +288,13 @@ def low_level_plan(
     Rules:
     1. **Observe first** – read the DOM snippet carefully before deciding.
     2. **Handle prerequisites** – surface login/signup flows when required, and output `user_prompt` with clear instructions for the human to complete authentication.
-    3. **Choose stability** – prefer visible text, aria-label, data-testid, role names.
-    4. **Avoid repetition** – if previous step failed for same selector, find an alternative.
-    5. **If you cannot find a good move**, output `{{"action":"replan","reasoning":"No actionable element visible","confidence":0.0}}`.
+    3. **Choose stability** – prefer visible text, aria-label, role names, or data-testid attributes. When text is missing (icon buttons), lean on `[role=...]`, `[aria-label=...]`, or `aria-labelledby` values instead of `:has-text`.
+    4. **Match intent** – if the goal expects creation or addition, favor elements whose text or aria-label includes words like "New", "Create", "Add", or "Database". Quote the matched attribute in the reasoning.
+    5. **Ground selectors** – cite the exact element text or attributes you see (e.g., `text="Database"`). Do not fabricate aria labels or IDs that are absent from the actionable list or DOM excerpt.
+    6. **Quick starts** – when the content area exposes quick-start buttons or chips whose labels match the goal (e.g., Database, Form, Template), click the relevant control using a direct text selector or the provided css_path rather than repeating sidebar clicks.
+    7. **Handle overlays** – when an overlay or dropdown intercepts pointer events, either choose an option inside it or send `{{"action":"press","key":"Escape"}}` before retrying. Reserve `"force": true` for cases where dismissal is impossible.
+    8. **Avoid repetition** – if the previous attempt already executed the same selector without progressing, choose a different element or escalate via `press`/`replan`.
+    9. **If you cannot find a good move**, output `{{"action":"replan","reasoning":"No actionable element visible","confidence":0.0}}` and explain what is missing.
 
     ---
 
@@ -418,6 +439,8 @@ def evaluate_goal_completion(
     - If the DOM already contains the UI elements described in the goal or success criteria, mark the status as "achieved" and cite them.
     - Only respond "not_yet" when the DOM is missing the required elements or clearly shows a blocking state (e.g., error, loader, login wall).
     - Many intermediate UI states (modals, dropdowns, inline forms) do not have unique URLs; evaluate them based on visible structure and text.
+    - Treat a visible creation surface (e.g., a heading such as "New page" accompanied by quick-start chips like Database/Form/Templates) as satisfying steps that require opening the command menu.
+    - If a dropdown listing creation options (Page, Database, Templates, etc.) is visible, consider the menu open and the selection step complete once the desired option appears.
     - Use direct evidence from the DOM excerpt whenever possible.
 
     Definitions:

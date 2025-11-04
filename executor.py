@@ -155,23 +155,94 @@ def execute_action(page, action_json):
 
     print(f"🔹 Executing: {a} -> {sel or val or key}")
 
+    def _sanitize_selector(selector: str | None) -> str | None:
+        if not selector:
+            return selector
+
+        def _repl(match):
+            attr = match.group(1).strip()
+            value = match.group(3)
+            value = value.replace('"', '\\"')
+            return f'[{attr}="{value}"]'
+
+        return re.sub(r"\[([^\]=]+)=([\'\"])(.*?)\2\]", _repl, selector)
+
+    def _resolve_locator(selector: str):
+        normalized = _sanitize_selector(selector) or selector
+        locator = page.locator(normalized)
+        if "nth" in action and isinstance(action["nth"], int):
+            locator = locator.nth(action["nth"])
+        elif action.get("last"):
+            locator = locator.last
+        elif action.get("all"):
+            return locator
+        else:
+            locator = locator.first
+        return locator
+
     try:
         if a == "navigate":
             page.goto(action["url"], wait_until="load")
         elif a == "click":
-            page.click(sel, timeout=timeout)
+            if not sel:
+                raise ValueError("Click action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                ensure_state = action.get("ensure_state", "visible")
+                locator.wait_for(state=ensure_state, timeout=timeout)
+            click_kwargs = {"timeout": timeout}
+            if "button" in action:
+                click_kwargs["button"] = action["button"]
+            if "click_count" in action:
+                click_kwargs["click_count"] = action["click_count"]
+            if action.get("force"):
+                click_kwargs["force"] = True
+            if "modifiers" in action:
+                click_kwargs["modifiers"] = action["modifiers"]
+            locator.click(**click_kwargs)
         elif a == "type":
-            page.fill(sel, val or "")
+            if not sel:
+                raise ValueError("Type action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            if action.get("focus_before", True):
+                locator.focus()
+            locator.fill(val or "", timeout=timeout)
         elif a == "press":
-            page.press(sel, key or "")
+            if sel:
+                locator = _resolve_locator(sel)
+                if action.get("ensure_visible", True):
+                    locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+                locator.press(key or "", timeout=timeout)
+            else:
+                page.keyboard.press(key or "")
         elif a == "hover":
-            page.hover(sel, timeout=timeout)
+            if not sel:
+                raise ValueError("Hover action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.hover(timeout=timeout)
         elif a == "check":
-            page.check(sel, timeout=timeout)
+            if not sel:
+                raise ValueError("Check action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.check(timeout=timeout, force=action.get("force", False))
         elif a == "uncheck":
-            page.uncheck(sel, timeout=timeout)
+            if not sel:
+                raise ValueError("Uncheck action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.uncheck(timeout=timeout, force=action.get("force", False))
         elif a == "upload":
-            page.set_input_files(sel, val)
+            if not sel:
+                raise ValueError("Upload action requires a selector.")
+            locator = _resolve_locator(sel)
+            locator.set_input_files(val)
         elif a == "scroll":
             direction = (val or "down").lower()
             if direction == "up":
@@ -179,40 +250,71 @@ def execute_action(page, action_json):
             else:
                 page.evaluate("window.scrollBy(0, window.innerHeight)")
         elif a == "select":
-            page.select_option(sel, val)
+            if not sel:
+                raise ValueError("Select action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.select_option(val, timeout=timeout)
         elif a == "focus":
-            page.focus(sel, timeout=timeout)
+            if not sel:
+                raise ValueError("Focus action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.focus()
         elif a == "clear":
-            page.fill(sel, "")
+            if not sel:
+                raise ValueError("Clear action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.fill("", timeout=timeout)
         elif a == "paste":
-            page.fill(sel, val or "")
+            if not sel:
+                raise ValueError("Paste action requires a selector.")
+            locator = _resolve_locator(sel)
+            if action.get("ensure_visible", True):
+                locator.wait_for(state=action.get("ensure_state", "visible"), timeout=timeout)
+            locator.fill(val or "", timeout=timeout)
         elif a == "wait":
             wait_for = action.get("wait_for")
             if wait_for:
-                page.wait_for_selector(wait_for, timeout=timeout)
+                sanitized_wait_for = _sanitize_selector(wait_for) or wait_for
+                page.wait_for_selector(sanitized_wait_for, timeout=timeout, state=action.get("wait_state", "visible"))
             else:
                 time.sleep(action.get("duration", timeout / 1000))
         elif a == "assert":
-            page.wait_for_selector(action.get("assert_selector"), timeout=timeout)
+            assert_selector = action.get("assert_selector")
+            if not assert_selector:
+                raise ValueError("Assert action requires 'assert_selector'.")
+            sanitized_assert = _sanitize_selector(assert_selector) or assert_selector
+            page.wait_for_selector(sanitized_assert, timeout=timeout, state=action.get("wait_state", "visible"))
         elif a == "user_prompt":
             prompt_message = action.get("message") or "Human intervention required. Complete the necessary steps and press Enter."
             print(f"🛑 Human action needed: {prompt_message}")
             input("👉 Press Enter once you've finished the requested action...")
-            return True
+            return True, None
         elif a == "replan":
             print("⚠️ Replanning required.")
-            return False
+            return False, "replan requested"
 
         if action.get("expect_navigation"):
             page.wait_for_load_state("networkidle")
 
-        return True
+        wait_for_selector = action.get("wait_for")
+        if wait_for_selector:
+            wait_state = action.get("wait_state", "visible")
+            sanitized_wait_for = _sanitize_selector(wait_for_selector) or wait_for_selector
+            page.wait_for_selector(sanitized_wait_for, timeout=timeout, state=wait_state)
+
+        return True, None
     except Exception as e:
         print(f"❌ Error executing {a}: {e}")
-        return False
+        return False, str(e)
 
 
-def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 40) -> Dict[str, Any]:
+def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 80) -> Dict[str, Any]:
     """
     Gather multiple perspectives of the current page to aid reasoning.
     Returns URL, title, raw DOM HTML, rendered text, interactable inventory,
@@ -266,6 +368,8 @@ def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 40)
                         "input[type='submit']",
                         "input[type='reset']",
                         "[role='button']",
+                        "div[role='button']",
+                        "div[style*='cursor: pointer']",
                         "summary"
                     ],
                     link: [
@@ -792,7 +896,7 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     "timestamp": time.time()
                 })
 
-                action_success = execute_action(page, action_json)
+                action_success, action_error = execute_action(page, action_json)
 
                 screenshot_path = f"step_{step_id}_iter{attempt}_{action_data.get('action', 'unknown')}.png"
                 page.screenshot(path=screenshot_path, full_page=True)
@@ -829,8 +933,23 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     "dom_excerpt": dom_excerpt(dom_after, limit=1200),
                     "screenshot": screenshot_path,
                     "success": action_success,
-                    "human_prompt": action_data.get("message")
+                    "human_prompt": action_data.get("message"),
+                    "error": action_error
                 }
+
+                if not action_success:
+                    print("  ⚠️ Action failed; preserving context for replan or human review.")
+                    add_recall({
+                        "type": "low_level_error",
+                        "step_id": step_id,
+                        "attempt": attempt,
+                        "action": action_data.get("action"),
+                        "selector": action_data.get("selector"),
+                        "error": action_error,
+                        "timestamp": time.time()
+                    })
+                    execution_summary.append(summary_entry)
+                    break
 
                 if goal_eval.get("status") == "achieved":
                     state_slug = slugify(
@@ -862,8 +981,8 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     execution_summary.append(summary_entry)
                     break
 
-                if not action_success or action_data.get("action") == "replan":
-                    print("  ⚠️ Action failed or requested replan. Proceeding to next high-level attempt.")
+                if action_data.get("action") == "replan":
+                    print("  ⚠️ Action requested replan. Proceeding to next high-level attempt.")
                     execution_summary.append(summary_entry)
                     break
 
@@ -918,7 +1037,8 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                 f"action={entry['low_level_action'].get('action')} "
                 f"status={entry['goal_status']} feedback={entry['feedback']} "
                 f"state_capture={entry.get('state_capture_html', 'n/a')} "
-                f"human_prompt={entry.get('human_prompt') or 'n/a'}"
+                f"human_prompt={entry.get('human_prompt') or 'n/a'} "
+                f"error={entry.get('error') or 'n/a'}"
             )
 
         context.close()
