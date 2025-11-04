@@ -708,9 +708,18 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
         base = re.sub(r"[^a-zA-Z0-9]+", "_", text).strip("_")
         return base or fallback
 
+    profile_root = Path("profiles")
+    profile_root.mkdir(exist_ok=True)
+    chromium_profile_dir = profile_root / "chromium_user_data"
+    chromium_profile_dir.mkdir(exist_ok=True)
+    chromium_profile_path = str(chromium_profile_dir.resolve())
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        page = browser.new_page()
+        context = p.chromium.launch_persistent_context(
+            user_data_dir=chromium_profile_path,
+            headless=False,
+        )
+        page = context.pages[0] if context.pages else context.new_page()
 
         print(f"\n🌐 Starting execution loop for task: {task or 'Unnamed task'}")
 
@@ -912,4 +921,4 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                 f"human_prompt={entry.get('human_prompt') or 'n/a'}"
             )
 
-        browser.close()
+        context.close()
