@@ -1,12 +1,333 @@
 # executor.py
+import base64
+import io
 import json
 import time
 import re
+from itertools import count
 from pathlib import Path
 from typing import List, Dict, Any, Iterable
 from playwright.sync_api import sync_playwright
 from planner import low_level_plan, evaluate_goal_completion
 
+DOM_DEBUG_DIR = Path("dom_dumps")
+DOM_DEBUG_DIR.mkdir(exist_ok=True)
+_DOM_SNAPSHOT_COUNTER = count(1)
+NETWORK_LOG_LIMIT = 200
+NETWORK_EXPORT_LIMIT = 120
+CANVAS_EXPORT_LIMIT = 5
+
+try:
+    from PIL import Image
+    import pytesseract
+
+    _OCR_AVAILABLE = True
+except Exception:
+    Image = None  # type: ignore
+    pytesseract = None  # type: ignore
+    _OCR_AVAILABLE = False
+
+
+def _save_dom_snapshots(context: Dict[str, Any], debug_payload: Dict[str, Any] | None = None) -> None:
+    """Persist rich diagnostic artifacts to disk for debugging."""
+    debug_payload = debug_payload or {}
+    try:
+        raw_dom = context.get("dom") or ""
+        filtered_dom = context.get("dom_filter") or ""
+        rendered_text = context.get("rendered_text") or ""
+        accessibility_tree = context.get("accessibility") or {}
+
+        any_primary = raw_dom or filtered_dom or rendered_text or accessibility_tree
+        if not any_primary and not debug_payload:
+            return
+
+        snapshot_index = next(_DOM_SNAPSHOT_COUNTER)
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        base_name = f"{snapshot_index:04d}_{timestamp}"
+
+        files_saved: List[str] = []
+
+        def _write_text_file(filename: str, content: str) -> None:
+            if not content:
+                return
+            path = DOM_DEBUG_DIR / filename
+            path.write_text(content, encoding="utf-8")
+            files_saved.append(path.name)
+
+        def _write_json_file(filename: str, data: Any) -> None:
+            if not data:
+                return
+            path = DOM_DEBUG_DIR / filename
+            serialized = json.dumps(data, indent=2, ensure_ascii=False)
+            path.write_text(serialized, encoding="utf-8")
+            files_saved.append(path.name)
+
+        def _write_binary_file(filename: str, payload: bytes) -> Path | None:
+            if not payload:
+                return None
+            path = DOM_DEBUG_DIR / filename
+            path.write_bytes(payload)
+            files_saved.append(path.name)
+            return path
+
+        _write_text_file(f"{base_name}_raw_dom.html", raw_dom)
+        _write_text_file(f"{base_name}_filtered_dom.txt", filtered_dom)
+        _write_text_file(f"{base_name}_rendered_text.txt", rendered_text)
+        _write_json_file(f"{base_name}_accessibility.json", accessibility_tree)
+
+        frames_payload = debug_payload.get("frames")
+        if frames_payload:
+            _write_json_file(f"{base_name}_frames.json", frames_payload)
+
+        shadow_payload = debug_payload.get("shadow")
+        if shadow_payload:
+            _write_json_file(f"{base_name}_shadow_dom.json", shadow_payload)
+
+        cdp_payload = debug_payload.get("cdp_dom_snapshot")
+        if cdp_payload:
+            _write_json_file(f"{base_name}_cdp_snapshot.json", cdp_payload)
+
+        network_payload = debug_payload.get("network_log")
+        if network_payload:
+            _write_json_file(f"{base_name}_network.json", network_payload)
+
+        canvas_payload = debug_payload.get("canvas")
+        if canvas_payload:
+            canvas_meta: List[Dict[str, Any]] = []
+            for idx, entry in enumerate(canvas_payload[:CANVAS_EXPORT_LIMIT], start=1):
+                canvas_info = {
+                    "index": entry.get("index"),
+                    "width": entry.get("width"),
+                    "height": entry.get("height"),
+                    "bounding_rect": entry.get("bounding_rect"),
+                    "to_data_url_error": entry.get("error"),
+                }
+                data_url = entry.get("data_url")
+                image_path: Path | None = None
+                if data_url and isinstance(data_url, str) and data_url.startswith("data:image"):
+                    header, _, b64_data = data_url.partition(",")
+                    try:
+                        binary = base64.b64decode(b64_data)
+                        image_path = _write_binary_file(
+                            f"{base_name}_canvas{idx}.png", binary
+                        )
+                        canvas_info["image_file"] = image_path.name if image_path else None
+                        if _OCR_AVAILABLE and image_path:
+                            try:
+                                with Image.open(io.BytesIO(binary)) as img:  # type: ignore[arg-type]
+                                    text = pytesseract.image_to_string(img)  # type: ignore[call-arg]
+                                ocr_text = text.strip()
+                                if ocr_text:
+                                    _write_text_file(
+                                        f"{base_name}_canvas{idx}_ocr.txt", ocr_text
+                                    )
+                                    canvas_info["ocr_text_file"] = f"{base_name}_canvas{idx}_ocr.txt"
+                                else:
+                                    canvas_info["ocr_text_file"] = None
+                            except Exception as ocr_exc:
+                                canvas_info["ocr_error"] = str(ocr_exc)
+                        elif data_url:
+                            canvas_info["ocr_text_file"] = None
+                            if not _OCR_AVAILABLE:
+                                canvas_info["ocr_error"] = "pytesseract not available"
+                    except Exception as decode_exc:
+                        canvas_info["image_decode_error"] = str(decode_exc)
+                canvas_meta.append(canvas_info)
+            _write_json_file(f"{base_name}_canvas.json", canvas_meta)
+
+        if files_saved:
+            saved_str = ", ".join(files_saved)
+            print(f"  🗂️ Saved diagnostics: {saved_str}")
+    except Exception as exc:
+        print(f"  ⚠️ Failed to save DOM diagnostics: {exc}")
+
+
+def _gather_frame_data(page, text_limit: int = 1500, html_limit: int = 6000) -> List[Dict[str, Any]]:
+    frames_details: List[Dict[str, Any]] = []
+    main_frame = None
+    try:
+        main_frame = page.main_frame
+    except Exception:
+        pass
+
+    for frame in page.frames:
+        try:
+            info: Dict[str, Any] = {
+                "name": frame.name,
+                "url": frame.url,
+                "is_main_frame": frame is main_frame,
+                "is_detached": frame.is_detached(),
+            }
+            parent = frame.parent_frame
+            if parent:
+                info["parent_url"] = parent.url
+        except Exception:
+            continue
+
+        try:
+            text_excerpt = frame.evaluate(
+                "(limit) => (document.body?.innerText || '').slice(0, limit)",
+                text_limit,
+            )
+            if text_excerpt:
+                info["text_excerpt"] = text_excerpt
+        except Exception:
+            pass
+
+        if frame is not main_frame:
+            try:
+                html_excerpt = frame.evaluate(
+                    "(limit) => (document.body?.innerHTML || '').slice(0, limit)",
+                    html_limit,
+                )
+                if html_excerpt:
+                    info["html_excerpt"] = html_excerpt
+            except Exception:
+                pass
+
+        frames_details.append(info)
+
+    return frames_details
+
+
+def _gather_shadow_dom(page, host_limit: int = 12, snippet_limit: int = 1200) -> List[Dict[str, Any]]:
+    try:
+        return page.evaluate(
+            """
+            (limit, snippetLimit) => {
+                const results = [];
+
+                const getCssPath = (el) => {
+                    if (!el || el.nodeType !== Node.ELEMENT_NODE) return null;
+                    const segments = [];
+                    let current = el;
+                    let depth = 0;
+                    while (current && current.nodeType === Node.ELEMENT_NODE && depth < 10) {
+                        let segment = current.nodeName.toLowerCase();
+                        if (current.id) {
+                            segment += "#" + current.id;
+                            segments.unshift(segment);
+                            break;
+                        }
+                        let index = 1;
+                        let sibling = current.previousElementSibling;
+                        while (sibling) {
+                            if (sibling.nodeName === current.nodeName) {
+                                index += 1;
+                            }
+                            sibling = sibling.previousElementSibling;
+                        }
+                        if (index > 1) {
+                            segment += ":nth-of-type(" + index + ")";
+                        }
+                        segments.unshift(segment);
+                        current = current.parentElement;
+                        depth += 1;
+                    }
+                    return segments.join(" > ");
+                };
+
+                const walker = document.createTreeWalker(
+                    document,
+                    NodeFilter.SHOW_ELEMENT
+                );
+
+                const seen = new Set();
+                let node;
+                while (results.length < limit && (node = walker.nextNode())) {
+                    if (!node.shadowRoot || seen.has(node)) continue;
+                    seen.add(node);
+
+                    const rect = node.getBoundingClientRect();
+                    const snippet = Array.from(node.shadowRoot.children || [])
+                        .map(child => child.outerHTML || "")
+                        .join("\\n")
+                        .slice(0, snippetLimit);
+
+                    results.push({
+                        host_tag: node.tagName.toLowerCase(),
+                        host_id: node.id || null,
+                        host_classes: node.className || null,
+                        css_path: getCssPath(node),
+                        child_count: node.shadowRoot.children ? node.shadowRoot.children.length : 0,
+                        bounding_rect: {
+                            x: rect.x,
+                            y: rect.y,
+                            width: rect.width,
+                            height: rect.height
+                        },
+                        markup_excerpt: snippet
+                    });
+                }
+                return results;
+            }
+            """,
+            host_limit,
+            snippet_limit,
+        ) or []
+    except Exception:
+        return []
+
+
+def _capture_cdp_snapshot(page) -> Dict[str, Any] | None:
+    session = None
+    try:
+        session = page.context.new_cdp_session(page)
+        snapshot = session.send(
+            "DOMSnapshot.captureSnapshot",
+            {
+                "computedStyles": [],
+                "includeDOMRects": True,
+                "includePaintOrder": False,
+            },
+        )
+        snapshot["captured_at"] = time.time()
+        return snapshot
+    except Exception:
+        return None
+    finally:
+        if session:
+            try:
+                session.detach()
+            except Exception:
+                pass
+
+
+def _gather_canvas_data(page, limit: int = CANVAS_EXPORT_LIMIT) -> List[Dict[str, Any]]:
+    try:
+        return page.evaluate(
+            """
+            (limit) => {
+                const canvases = Array.from(document.querySelectorAll('canvas')).slice(0, limit);
+                return canvases.map((canvas, idx) => {
+                    const rect = canvas.getBoundingClientRect();
+                    let dataUrl = null;
+                    let error = null;
+                    try {
+                        dataUrl = canvas.toDataURL('image/png');
+                    } catch (err) {
+                        error = String(err);
+                    }
+                    return {
+                        index: idx,
+                        width: canvas.width,
+                        height: canvas.height,
+                        bounding_rect: {
+                            x: rect.x,
+                            y: rect.y,
+                            width: rect.width,
+                            height: rect.height
+                        },
+                        data_url: dataUrl,
+                        error
+                    };
+                });
+            }
+            """,
+            limit,
+        ) or []
+    except Exception:
+        return []
 
 def _truncate_text(text: Any, limit: int) -> str:
     """Safely truncate text representations while preserving ASCII output."""
@@ -76,6 +397,23 @@ def build_dom_filter_snapshot(
             ]
             preview_line = "; ".join([p for p in preview if p])
             lines.append(f"  - {cat_label}: {preview_line or 'n/a'} (total captured={len(entries)})")
+
+    fragments = context.get("fragment_summary") or []
+    if fragments:
+        lines.append("FRAGMENT_CANDIDATES:")
+        for idx, frag in enumerate(fragments, start=1):
+            text = _format_inline(frag.get("text"), limit=160)
+            selector = frag.get("selector") or ""
+            source = frag.get("source") or ""
+            tag = frag.get("tag") or ""
+            line = f"  [{idx}] text=\"{text}\""
+            if tag:
+                line += f" tag={tag}"
+            if selector:
+                line += f" selector=\"{selector}\""
+            if source:
+                line += f" source=\"{source}\""
+            lines.append(line)
 
     interactables = context.get("actionables") or []
     if interactables:
@@ -314,7 +652,12 @@ def execute_action(page, action_json):
         return False, str(e)
 
 
-def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 80) -> Dict[str, Any]:
+def collect_page_context(
+    page,
+    text_limit: int = 8000,
+    max_clickables: int = 80,
+    network_events: List[Dict[str, Any]] | None = None,
+) -> Dict[str, Any]:
     """
     Gather multiple perspectives of the current page to aid reasoning.
     Returns URL, title, raw DOM HTML, rendered text, interactable inventory,
@@ -332,6 +675,7 @@ def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 80)
         "accessibility": {},
         "meta": {}
     }
+    debug_payload: Dict[str, Any] = {}
 
     try:
         context["url"] = page.url
@@ -538,6 +882,35 @@ def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 80)
                         delete info.dataset;
                     }
 
+                    const collectFragments = () => {
+                        const fragments = [];
+                        const seenFragments = new Set();
+                        const candidates = el.querySelectorAll("*");
+                        for (const node of candidates) {
+                            if (!node || node === el) continue;
+                            if (node.children && node.children.length > 0) continue;
+                            const raw = (node.innerText || node.textContent || "").replace(/\s+/g, " ").trim();
+                            if (!raw) continue;
+                            if (raw.length > 80) continue;
+                            const cssPath = getCssPath(node);
+                            if (!cssPath) continue;
+                            const key = raw + "::" + cssPath;
+                            if (seenFragments.has(key)) continue;
+                            seenFragments.add(key);
+                            fragments.push({
+                                text: raw.slice(0, 120),
+                                css_path: cssPath,
+                                tag: node.tagName ? node.tagName.toLowerCase() : null
+                            });
+                            if (fragments.length >= 10) break;
+                        }
+                        if (fragments.length) {
+                            info.fragments = fragments;
+                        }
+                    };
+
+                    collectFragments();
+
                     return info;
                 };
 
@@ -636,8 +1009,56 @@ def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 80)
             max_clickables * 4 if max_clickables else 160,
         )
         if isinstance(interactable_payload, dict):
-            context["actionables"] = interactable_payload.get("all") or []
-            context["actionable_categories"] = interactable_payload.get("categories") or {}
+            base_actionables = interactable_payload.get("all") or []
+            categories = interactable_payload.get("categories") or {}
+            derived_actionables: List[Dict[str, Any]] = []
+            for item in base_actionables:
+                fragments = item.get("fragments") or []
+                for fragment in fragments:
+                    frag_text = (fragment.get("text") or "").strip()
+                    frag_css = fragment.get("css_path")
+                    if not frag_text or not frag_css:
+                        continue
+                    derived = dict(item)
+                    derived.pop("fragments", None)
+                    derived["text"] = frag_text
+                    derived["css_path"] = frag_css
+                    derived["tag"] = fragment.get("tag") or item.get("tag")
+                    base_categories = list(derived.get("categories") or [])
+                    if "fragment" not in base_categories:
+                        base_categories.append("fragment")
+                    derived["categories"] = base_categories
+                    derived["derived_from"] = item.get("css_path") or item.get("id") or item.get("tag")
+                    derived["is_fragment"] = True
+                    derived_actionables.append(derived)
+            if len(derived_actionables) > 200:
+                derived_actionables = derived_actionables[:200]
+            if derived_actionables:
+                categories = dict(categories)
+                fragment_index = categories.get("fragment", [])
+                if not isinstance(fragment_index, list):
+                    fragment_index = []
+                fragment_index.extend(
+                    {
+                        "tag": entry.get("tag"),
+                        "text": entry.get("text"),
+                        "css_path": entry.get("css_path"),
+                        "derived_from": entry.get("derived_from"),
+                    }
+                    for entry in derived_actionables[:150]
+                )
+                categories["fragment"] = fragment_index
+                context["fragment_summary"] = [
+                    {
+                        "text": item.get("text"),
+                        "selector": item.get("css_path"),
+                        "tag": item.get("tag"),
+                        "source": item.get("derived_from"),
+                    }
+                    for item in derived_actionables[:20]
+                ]
+            context["actionables"] = derived_actionables + base_actionables
+            context["actionable_categories"] = categories
     except Exception:
         pass
 
@@ -781,6 +1202,80 @@ def collect_page_context(page, text_limit: int = 8000, max_clickables: int = 80)
     except Exception:
         pass
 
+    frames_debug = _gather_frame_data(page)
+    if frames_debug:
+        debug_payload["frames"] = frames_debug
+        context["frames_summary"] = [
+            {
+                "name": item.get("name"),
+                "url": item.get("url"),
+                "is_main_frame": item.get("is_main_frame"),
+                "is_detached": item.get("is_detached"),
+                "text_excerpt": (item.get("text_excerpt") or "")[:200],
+            }
+            for item in frames_debug
+        ]
+
+    shadow_debug = _gather_shadow_dom(page)
+    if shadow_debug:
+        debug_payload["shadow"] = shadow_debug
+        context["shadow_summary"] = [
+            {
+                "host_tag": item.get("host_tag"),
+                "css_path": item.get("css_path"),
+                "child_count": item.get("child_count"),
+                "markup_excerpt": (item.get("markup_excerpt") or "")[:200],
+            }
+            for item in shadow_debug
+        ]
+
+    cdp_snapshot = _capture_cdp_snapshot(page)
+    if cdp_snapshot:
+        debug_payload["cdp_dom_snapshot"] = cdp_snapshot
+        documents = cdp_snapshot.get("documents") or []
+        node_count = 0
+        for doc in documents:
+            nodes = doc.get("nodes") if isinstance(doc, dict) else {}
+            if isinstance(nodes, dict):
+                node_count += len(nodes.get("nodeName") or [])
+        context["cdp_dom_stats"] = {
+            "documents": len(documents),
+            "node_count": node_count,
+            "strings_count": len(cdp_snapshot.get("strings") or []),
+        }
+
+    if network_events:
+        trimmed_network = network_events[-NETWORK_EXPORT_LIMIT:]
+        debug_payload["network_log"] = trimmed_network
+        context["network_summary"] = [
+            {
+                "type": entry.get("type"),
+                "url": (entry.get("url") or "")[:200],
+                "method": entry.get("method"),
+                "status": entry.get("status"),
+                "timestamp": entry.get("timestamp"),
+                "resource_type": entry.get("resource_type"),
+            }
+            for entry in trimmed_network[-10:]
+        ]
+
+    canvas_debug = _gather_canvas_data(page)
+    if canvas_debug:
+        debug_payload["canvas"] = canvas_debug
+        context["canvas_summary"] = [
+            {
+                "index": item.get("index"),
+                "width": item.get("width"),
+                "height": item.get("height"),
+                "bounding_rect": item.get("bounding_rect"),
+                "has_data_url": bool(item.get("data_url")),
+                "error": item.get("error"),
+            }
+            for item in canvas_debug
+        ]
+
+    _save_dom_snapshots(context, debug_payload=debug_payload)
+
     return context
 
 
@@ -797,6 +1292,115 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
     MAX_RECALL_ENTRIES = 30
     state_capture_dir = Path("state_captures")
     state_capture_dir.mkdir(exist_ok=True)
+    network_events: List[Dict[str, Any]] = []
+
+    def _trim_network_events() -> None:
+        if len(network_events) > NETWORK_LOG_LIMIT:
+            del network_events[:-NETWORK_LOG_LIMIT]
+
+    def _record_request(request) -> None:
+        try:
+            network_events.append(
+                {
+                    "type": "request",
+                    "timestamp": time.time(),
+                    "url": request.url,
+                    "method": request.method,
+                    "resource_type": request.resource_type,
+                }
+            )
+            _trim_network_events()
+        except Exception:
+            pass
+
+    def _record_response(response) -> None:
+        try:
+            network_events.append(
+                {
+                    "type": "response",
+                    "timestamp": time.time(),
+                    "url": response.url,
+                    "status": response.status,
+                    "method": response.request.method if response.request else None,
+                    "resource_type": response.request.resource_type if response.request else None,
+                }
+            )
+            _trim_network_events()
+        except Exception:
+            pass
+
+    def _record_request_failed(request) -> None:
+        try:
+            failure = request.failure
+            failure_text = failure.error_text if failure else None
+            network_events.append(
+                {
+                    "type": "requestfailed",
+                    "timestamp": time.time(),
+                    "url": request.url,
+                    "method": request.method,
+                    "resource_type": request.resource_type,
+                    "failure": failure_text,
+                }
+            )
+            _trim_network_events()
+        except Exception:
+            pass
+
+    def _maybe_patch_action_with_fragments(
+        action: Dict[str, Any], context_snapshot: Dict[str, Any]
+    ) -> tuple[Dict[str, Any], Dict[str, Any] | None]:
+        """
+        If the planner picked a text-based selector, swap in a precomputed fragment selector.
+        Returns the potentially modified action plus metadata about the patch.
+        """
+        try:
+            selector = action.get("selector")
+        except AttributeError:
+            return action, None
+
+        if not selector or not isinstance(selector, str):
+            return action, None
+
+        fragments = context_snapshot.get("actionables") or []
+        lowered_selector = selector.lower()
+        best_fragment = None
+        for item in fragments:
+            if not isinstance(item, dict):
+                continue
+            if not item.get("is_fragment"):
+                continue
+            text = (item.get("text") or "").strip()
+            css_path = item.get("css_path")
+            if not text or not css_path:
+                continue
+            if css_path == selector:
+                continue
+            if text.lower() in lowered_selector:
+                best_fragment = item
+                break
+
+        if not best_fragment:
+            return action, None
+
+        original_selector = selector
+        action["selector"] = best_fragment["css_path"]
+        if action.get("action") == "click":
+            action.setdefault("ensure_visible", True)
+            action.setdefault("ensure_state", "visible")
+
+        wait_for = action.get("wait_for")
+        if isinstance(wait_for, str) and (best_fragment["text"] or "").strip():
+            if best_fragment["text"].strip().lower() in wait_for.lower():
+                # Avoid waiting on a string that is already visible before the click.
+                action.pop("wait_for", None)
+
+        patch_info = {
+            "text": best_fragment.get("text"),
+            "selector": best_fragment.get("css_path"),
+            "original_selector": original_selector,
+        }
+        return action, patch_info
 
     def add_recall(entry: Dict[str, Any]):
         recall_context.append(entry)
@@ -823,6 +1427,9 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
             user_data_dir=chromium_profile_path,
             headless=False,
         )
+        context.on("request", _record_request)
+        context.on("response", _record_response)
+        context.on("requestfailed", _record_request_failed)
         page = context.pages[0] if context.pages else context.new_page()
 
         print(f"\n🌐 Starting execution loop for task: {task or 'Unnamed task'}")
@@ -858,7 +1465,9 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
             step_completed = False
             for attempt in range(1, max_low_level_rounds + 1):
                 print(f"\n  ➿ Low-level attempt {attempt}/{max_low_level_rounds}")
-                page_context_before = collect_page_context(page)
+                page_context_before = collect_page_context(
+                    page, network_events=network_events
+                )
                 dom_before = page_context_before.get("dom", "")
                 rendered_excerpt = (page_context_before.get("rendered_text") or "")[:400]
                 add_recall({
@@ -885,6 +1494,16 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     })
                     continue
 
+                action_data, fragment_patch = _maybe_patch_action_with_fragments(
+                    action_data, page_context_before
+                )
+                if fragment_patch:
+                    print(
+                        f"  🔁 Using fragment selector for '{fragment_patch['text']}': {fragment_patch['selector']}"
+                    )
+
+                patched_action_json = json.dumps(action_data)
+
                 add_recall({
                     "type": "low_level_decision",
                     "step_id": step_id,
@@ -893,15 +1512,18 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     "action": action_data.get("action"),
                     "selector": action_data.get("selector"),
                     "value": action_data.get("value"),
+                    "patched_selector": fragment_patch,
                     "timestamp": time.time()
                 })
 
-                action_success, action_error = execute_action(page, action_json)
+                action_success, action_error = execute_action(page, patched_action_json)
 
                 screenshot_path = f"step_{step_id}_iter{attempt}_{action_data.get('action', 'unknown')}.png"
                 page.screenshot(path=screenshot_path, full_page=True)
 
-                page_context_after = collect_page_context(page)
+                page_context_after = collect_page_context(
+                    page, network_events=network_events
+                )
                 dom_after = page_context_after.get("dom", "")
                 goal_eval = evaluate_goal_completion(
                     step_goal,
@@ -934,7 +1556,8 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     "screenshot": screenshot_path,
                     "success": action_success,
                     "human_prompt": action_data.get("message"),
-                    "error": action_error
+                    "error": action_error,
+                    "patched_selector": fragment_patch
                 }
 
                 if not action_success:
@@ -995,7 +1618,9 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
 
             # Optional overall goal check after each high-level step
             if overall_goal:
-                page_context_now = collect_page_context(page)
+                page_context_now = collect_page_context(
+                    page, network_events=network_events
+                )
                 dom_now = page_context_now.get("dom", "")
                 overall_eval = evaluate_goal_completion(
                     overall_goal,

@@ -1,0 +1,71 @@
+{
+  "role": "WebArea",
+  "name": "New page",
+  "children": [
+    {
+      "role": "dialog",
+      "name": "",
+      "modal": true,
+      "children": [
+        {
+          "role": "button",
+          "name": ""
+        },
+        {
+          "role": "text",
+          "name": "Add to"
+        },
+        {
+          "role": "button",
+          "name": "Private",
+          "haspopup": "dialog"
+        },
+        {
+          "role": "textbox",
+          "name": "Search",
+          "focused": true
+        },
+        {
+          "role": "button",
+          "name": "Empty database"
+        },
+        {
+          "role": "button",
+          "name": "Build with AI"
+        },
+        {
+          "role": "text",
+          "name": "Suggested"
+        },
+        {
+          "role": "button",
+          "name": "Tasks Tracker"
+        },
+        {
+          "role": "button",
+          "name": "Projects"
+        },
+        {
+          "role": "button",
+          "name": "Document Hub"
+        },
+        {
+          "role": "button",
+          "name": "Brainstorm Session"
+        },
+        {
+          "role": "button",
+          "name": "Meeting Notes"
+        },
+        {
+          "role": "button",
+          "name": "Goals Tracker"
+        },
+        {
+          "role": "button",
+          "name": "More templates"
+        }
+      ]
+    }
+  ]
+}

@@ -150,6 +150,7 @@ def low_level_plan(
         page_title = page_context.get("title", "")
         rendered_text = page_context.get("rendered_text", "")
         click_map = page_context.get("actionables", [])
+        fragment_summary = page_context.get("fragment_summary", [])
         accessibility = page_context.get("accessibility", {})
         meta_summary = page_context.get("meta", {})
     else:
@@ -158,6 +159,7 @@ def low_level_plan(
         page_title = ""
         rendered_text = ""
         click_map = []
+        fragment_summary = []
         accessibility = {}
         meta_summary = {}
 
@@ -191,6 +193,10 @@ def low_level_plan(
     click_summary = ""
     if click_map:
         click_summary = _serialize(click_map[:CLICK_LIMIT], limit=5000)
+
+    fragment_text = ""
+    if fragment_summary:
+        fragment_text = _serialize(fragment_summary[:CLICK_LIMIT], limit=2000)
 
     accessibility_summary = ""
     if accessibility:
@@ -254,6 +260,9 @@ def low_level_plan(
     Known actionable elements (subset):
     {click_summary or "<none detected>"}
 
+    Fragment selector candidates:
+    {fragment_text or "<none detected>"}
+
     Accessibility snapshot (subset):
     {accessibility_summary or "<unavailable>"}
 
@@ -291,10 +300,11 @@ def low_level_plan(
     3. **Choose stability** – prefer visible text, aria-label, role names, or data-testid attributes. When text is missing (icon buttons), lean on `[role=...]`, `[aria-label=...]`, or `aria-labelledby` values instead of `:has-text`.
     4. **Match intent** – if the goal expects creation or addition, favor elements whose text or aria-label includes words like "New", "Create", "Add", or "Database". Quote the matched attribute in the reasoning.
     5. **Ground selectors** – cite the exact element text or attributes you see (e.g., `text="Database"`). Do not fabricate aria labels or IDs that are absent from the actionable list or DOM excerpt.
-    6. **Quick starts** – when the content area exposes quick-start buttons or chips whose labels match the goal (e.g., Database, Form, Template), click the relevant control using a direct text selector or the provided css_path rather than repeating sidebar clicks.
-    7. **Handle overlays** – when an overlay or dropdown intercepts pointer events, either choose an option inside it or send `{{"action":"press","key":"Escape"}}` before retrying. Reserve `"force": true` for cases where dismissal is impossible.
-    8. **Avoid repetition** – if the previous attempt already executed the same selector without progressing, choose a different element or escalate via `press`/`replan`.
-    9. **If you cannot find a good move**, output `{{"action":"replan","reasoning":"No actionable element visible","confidence":0.0}}` and explain what is missing.
+    6. **Use fragment selectors** – when an actionable is tagged with `is_fragment=true` or appears in the fragment summary, treat its `css_path` as the precise selector for that chip/label and use it directly instead of inventing a new `:has-text()` query.
+    7. **Quick starts** – when the content area exposes quick-start buttons or chips whose labels match the goal (e.g., Database, Form, Template), click the relevant control using the provided selector rather than repeating sidebar clicks.
+    8. **Handle overlays** – when an overlay or dropdown intercepts pointer events, either choose an option inside it or send `{{"action":"press","key":"Escape"}}` before retrying. Reserve `"force": true` for cases where dismissal is impossible.
+    9. **Avoid repetition** – if the previous attempt already executed the same selector without progressing, choose a different element or escalate via `press`/`replan`.
+    10. **Wait wisely** – only include `wait_for`/`assert_selector` when you expect a *new* cue to appear as a result of the action; do not wait on text that is already visible.
 
     ---
 
