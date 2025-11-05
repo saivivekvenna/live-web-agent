@@ -5,7 +5,7 @@ import os
 import sys
 import textwrap
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from openai import OpenAI
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -14,18 +14,6 @@ from bots._profile_launch import launch_persistent, shutdown as shutdown_persist
 
 NOTION_URL = "https://www.notion.so/"
 PROFILE_DIR = "profiles/notion"
-DEFAULT_DATABASE_LABELS = [
-    ("dialog button[Database]", lambda page: page.locator("[role='dialog']").get_by_role("button", name="Database")),
-    ("dialog menuitem[Database]", lambda page: page.locator("[role='dialog']").get_by_role("menuitem", name="Database")),
-    ("dialog text=Database", lambda page: page.locator("[role='dialog']").get_by_text("Database", exact=True)),
-    ("dialog text contains 'Database'", lambda page: page.locator("[role='dialog']").get_by_text("Database", exact=False)),
-    ("link[Database]", lambda page: page.get_by_role("link", name="Database")),
-    ("button[Database]", lambda page: page.get_by_role("button", name="Database")),
-    ("link[Databases]", lambda page: page.get_by_role("link", name="Databases")),
-    ("text=Database", lambda page: page.get_by_text("Database", exact=True)),
-    ("text contains 'New database'", lambda page: page.get_by_text("New database")),
-]
-
 OVERLAY_LOCATORS = [
     ("role[dialog]", lambda page: page.locator("[role='dialog']")),
     ("aria-modal", lambda page: page.locator("[aria-modal='true']")),
@@ -33,49 +21,27 @@ OVERLAY_LOCATORS = [
     ("role[listbox]", lambda page: page.locator("[role='listbox']")),
 ]
 
-DEFAULT_ADD_NEW_LABELS = [
-    ("button[Add new]", lambda page: page.get_by_role("button", name="Add new")),
-    ("button[Create new]", lambda page: page.get_by_role("button", name="Create new")),
-    ("button[New page]", lambda page: page.get_by_role("button", name="New page")),
-    ("link[Add new]", lambda page: page.get_by_role("link", name="Add new")),
-    ("link[Create new]", lambda page: page.get_by_role("link", name="Create new")),
-    ("text=Add new", lambda page: page.get_by_text("Add new", exact=True)),
-    ("text=Create new", lambda page: page.get_by_text("Create new", exact=True)),
-    ("text contains 'New page'", lambda page: page.get_by_text("New page")),
-]
-
-DEFAULT_EMPTY_DATABASE_LABELS = [
-    ("dialog button[Empty database]", lambda page: page.locator("[role='dialog']").get_by_role("button", name="Empty database")),
-    ("dialog menuitem[Empty database]", lambda page: page.locator("[role='dialog']").get_by_role("menuitem", name="Empty database")),
-    ("dialog text contains 'Empty database'", lambda page: page.locator("[role='dialog']").get_by_text("Empty database", exact=False)),
-    ("button[Empty database]", lambda page: page.get_by_role("button", name="Empty database")),
-    ("link[Empty database]", lambda page: page.get_by_role("link", name="Empty database")),
-    ("text=Empty database", lambda page: page.get_by_text("Empty database", exact=True)),
-    ("text contains 'Empty database'", lambda page: page.get_by_text("Empty database", exact=False)),
-    ("role=menuitem[Empty database]", lambda page: page.get_by_role("menuitem", name="Empty database")),
-    ("button[Empty]", lambda page: page.get_by_role("button", name="Empty")),
-    ("link[Empty]", lambda page: page.get_by_role("link", name="Empty")),
-    ("text=Empty", lambda page: page.get_by_text("Empty", exact=True)),
-    ("text contains 'Empty'", lambda page: page.get_by_text("Empty", exact=False)),
-    ("text contains 'Empty page'", lambda page: page.get_by_text("Empty page")),
+NOTION_CONTROL_HINTS = [
+    "Add new",
+    "Create new",
+    "New page",
+    "Database",
+    "New database",
+    "Empty database",
+    "Empty",
+    "Empty page",
 ]
 SCREENSHOT_PATH = "notion_database_click.png"
 client = OpenAI()
 DEFAULT_GOAL = "create a database in notion"
-
-LocatorOption = tuple[str, Callable[[object], object]]
+MAX_ACTIONS = 12
 
 
 @dataclass
-class StepConfig:
-    name: str
-    prompt_desc: str
-    prompt_defaults: List[str]
-    locator_defaults: List[LocatorOption]
-    required: bool = True
-    condition: Optional[Callable[[object], bool]] = None
-    retries: int = 1
-    post_wait_ms: int = 800
+class ActionRecord:
+    label: str
+    success: bool
+    message: str
 
 
 @dataclass
@@ -84,7 +50,8 @@ class IntegrationConfig:
     action: str
     base_url: str
     profile_dir: str
-    workflow: List[StepConfig]
+    label_hints: List[str] = field(default_factory=list)
+    extra_prompt: str = ""
     launch_kwargs: dict = field(default_factory=dict)
 
 
@@ -157,19 +124,6 @@ def _looks_like_dashboard(page) -> bool:
     return False
 
 
-def _extract_json_array(text: str) -> str:
-    """
-    Pull the first JSON array (or fallback to raw text) from a model response.
-    """
-    text = text.strip()
-    start = text.find("[")
-    end = text.rfind("]")
-    if start != -1 and end != -1 and end > start:
-        snippet = text[start : end + 1]
-        return snippet.strip()
-    return "[]"
-
-
 def _extract_json_object(text: str) -> dict:
     """
     Pull the first JSON object from a model response.
@@ -186,140 +140,158 @@ def _extract_json_object(text: str) -> dict:
     return {}
 
 
-def _suggest_label_candidates(dom_html: str, description: str, defaults: Iterable[str], goal_hint: Optional[str] = None) -> List[str]:
+def _make_label_locators(label: str, hints: Optional[List[str]] = None) -> List[tuple]:
+    """Return a prioritized list of locator builders for a given label."""
+    label = label.strip()
+    if not label:
+        return []
+
+    hints = {hint.lower() for hint in (hints or [])}
+    prefers_exact = "exact" in hints or len(label.split()) <= 2
+    include_dialog = "dialog" in hints or "overlay" in hints or not hints
+    include_menu = "menu" in hints or "menuitem" in hints
+
+    def overlay_button(page, label=label, exact=prefers_exact):
+        return page.locator("[role='dialog']").get_by_role("button", name=label, exact=exact)
+
+    def overlay_menuitem(page, label=label):
+        return page.locator("[role='dialog']").get_by_role("menuitem", name=label, exact=False)
+
+    def overlay_text(page, label=label, exact=prefers_exact):
+        return page.locator("[role='dialog']").get_by_text(label, exact=exact)
+
+    def role_button(page, label=label, exact=prefers_exact):
+        return page.get_by_role("button", name=label, exact=exact)
+
+    def role_link(page, label=label, exact=prefers_exact):
+        return page.get_by_role("link", name=label, exact=exact)
+
+    def role_menuitem(page, label=label):
+        return page.get_by_role("menuitem", name=label, exact=False)
+
+    def text_match(page, label=label, exact=prefers_exact):
+        return page.get_by_text(label, exact=exact)
+
+    def locator_contains(page, label=label):
+        return page.locator(f"text={label}")
+
+    options: List[tuple] = []
+    seen: set[str] = set()
+
+    def add(desc: str, builder: Callable) -> None:
+        if desc in seen:
+            return
+        seen.add(desc)
+        options.append((desc, builder))
+
+    if include_dialog:
+        add(f"dialog role=button[{label}]", overlay_button)
+        add(f"dialog role=menuitem[{label}]", overlay_menuitem)
+        add(f"dialog text~='{label}'", overlay_text)
+
+    add(f"role=button[{label}]", role_button)
+    add(f"role=link[{label}]", role_link)
+
+    if include_menu:
+        add(f"role=menuitem[{label}]", role_menuitem)
+
+    add(f"text~='{label}'", text_match)
+    add(f"locator text={label}", locator_contains)
+
+    return options
+
+
+def _attempt_click(page, label: str, hints: Optional[List[str]] = None) -> tuple[bool, str]:
     """
-    Ask an LLM to suggest button/link labels based on the live DOM.
-    Returns a short, deduplicated list of candidate strings.
+    Attempt to click a label using generated locator strategies.
+    Returns (success, message).
     """
-    dom_excerpt = dom_html[:30000] if dom_html else ""
-    default_list = ", ".join(f'"{d}"' for d in defaults)
-    goal_context = f"User goal/context: {goal_hint}\n\n" if goal_hint else ""
+    options = _make_label_locators(label, hints)
+    if not options:
+        return False, "No locator strategies generated."
+
+    last_error = "No matching elements located."
+    for desc, builder in options:
+        try:
+            locator = builder(page)
+            if locator.count() == 0:
+                last_error = f"{desc} matched 0 elements"
+                continue
+            target = locator.first
+            target.wait_for(state="visible", timeout=10000)
+            target.click(timeout=10000)
+            return True, f"Clicked via {desc}"
+        except Exception as exc:
+            last_error = str(exc)
+    return False, f"All strategies failed. Last error: {last_error}"
+
+
+def _format_history(history: List[ActionRecord]) -> str:
+    if not history:
+        return "No actions taken yet."
+    lines = []
+    for idx, record in enumerate(history[-8:], start=max(len(history) - 7, 1)):
+        outcome = "success" if record.success else "failure"
+        lines.append(f"{idx}. {record.label} → {outcome} ({record.message})")
+    return "\n".join(lines)
+
+
+def _plan_next_action(page, goal: str, config: IntegrationConfig, history: List[ActionRecord]) -> dict:
+    dom_snapshot = _capture_prioritized_dom(page)
+    history_text = _format_history(history)
+    hints_text = ", ".join(config.label_hints) if config.label_hints else "None"
+    overlay_state = "visible" if _overlay_present(page) else "not visible"
+    dashboard_hint = "likely on dashboard" if _looks_like_dashboard(page) else "not clearly on dashboard"
+
     prompt = textwrap.dedent(
         f"""
-        You are analyzing a live HTML snippet. Identify up to five distinct button, link,
-        or quick-start chip labels that a user would click to {description}.
+        You are operating a browser automation agent.
 
-        Return your answer as a JSON array of strings, ordered from most to least likely.
-        Avoid duplicates and keep each label short (ideally 1-3 words).
+        Goal: {goal}
+        Provider: {config.provider}
+        Known helpful controls: {hints_text}
+        Overlay/dialog visibility: {overlay_state}
+        Dashboard heuristic: {dashboard_hint}
 
-        Known reliable defaults you may reuse: [{default_list}]
+        Recent action history:
+        {history_text}
 
-        {goal_context}HTML SNIPPET (truncated):
-        {dom_excerpt}
+        Examine the DOM snippet and decide the single next best action to advance toward the goal.
+        Respond with a JSON object containing:
+          - "finish": boolean indicating whether the goal is already satisfied.
+          - "reason": short string explaining your decision.
+          - "targets": array (max 3) of action plans. Each object must include:
+                • "action": currently only "click" is supported.
+                • "label_variants": array of 1-3 plausible UI labels to try, ordered by priority.
+                • "locator_hints": optional array of hint strings (e.g., "dialog", "menu", "exact") to guide selectors.
+                • "notes": optional string giving context for the click.
+
+        If you believe the task is complete, set "finish": true and provide an empty "targets" array.
+
+        DOM SNIPPET (truncated to 30k chars):
+        {dom_snapshot}
         """
     ).strip()
+
+    if config.extra_prompt:
+        prompt += f"\n\nAdditional context: {config.extra_prompt}"
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You extract actionable UI labels from HTML and respond with JSON arrays only."},
+                {"role": "system", "content": "You plan browser actions. Always respond with JSON only."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.2,
+            temperature=0.1,
         )
-        raw = response.choices[0].message.content or "[]"
-        json_snippet = _extract_json_array(raw)
-        labels = json.loads(json_snippet)
-        candidates: List[str] = []
-        seen: set[str] = set()
-        for label in labels:
-            if not isinstance(label, str):
-                continue
-            norm = label.strip()
-            key = norm.lower()
-            if not norm or len(norm) > 64 or key in seen:
-                continue
-            seen.add(key)
-            candidates.append(norm)
-        return candidates[:5]
+        raw = response.choices[0].message.content or "{}"
+        plan = _extract_json_object(raw)
+        if not isinstance(plan, dict):
+            raise ValueError("Planner did not return a JSON object.")
+        return plan
     except Exception as exc:
-        print(f"  • LLM label suggestion failed: {exc}")
-        return []
-
-
-def _make_label_locators(label: str):
-    """Return a list of locator builders for a given label."""
-    label = label.strip()
-    if not label:
-        return []
-    return [
-        (f"role=button[{label}]", lambda page, label=label: page.get_by_role("button", name=label, exact=False)),
-        (f"role=link[{label}]", lambda page, label=label: page.get_by_role("link", name=label, exact=False)),
-        (f"text~='{label}'", lambda page, label=label: page.get_by_text(label, exact=False)),
-    ]
-
-
-def _build_locator_options(suggestions: List[str], defaults: List[tuple]) -> List[tuple]:
-    """Merge LLM suggestions and default fallbacks into an ordered locator list."""
-    options: List[tuple] = []
-    seen_desc: set[str] = set()
-
-    for label in suggestions:
-        for desc, builder in _make_label_locators(label):
-            if desc in seen_desc:
-                continue
-            options.append((desc, builder))
-            seen_desc.add(desc)
-
-    for desc, builder in defaults:
-        if desc in seen_desc:
-            continue
-        options.append((desc, builder))
-        seen_desc.add(desc)
-
-    return options
-
-
-def click_with_fallbacks(page, options: List[tuple], description: str) -> None:
-    """
-    Attempt to click using a list of locator builders. Raises RuntimeError when all fail.
-    """
-    for label, builder in options:
-        try:
-            locator = builder(page)
-            if locator.count() == 0:
-                print(f"  • No matches for {label}; trying next…")
-                continue
-            target = locator.first
-            target.wait_for(state="visible", timeout=10000)
-            target.click(timeout=10000)
-            print(f"✅ {description} via selector: {label}")
-            return
-        except Exception as exc:
-            print(f"  • Selector {label} failed: {exc}")
-    raise RuntimeError(f"Could not locate the {description.lower()} with known selectors.")
-
-
-def _run_step(page, step: StepConfig, goal: str) -> bool:
-    """
-    Execute a single workflow step, returning True on success. Optional steps
-    should be marked with ``required=False`` in the configuration and callers
-    can inspect the return value to decide how to proceed.
-    """
-    if step.condition and not step.condition(page):
-        print(f"⏭️  Skipping {step.name} (condition not met).")
-        return True
-
-    for attempt in range(1, step.retries + 1):
-        dom_snapshot = _capture_prioritized_dom(page)
-        suggestions = _suggest_label_candidates(dom_snapshot, step.prompt_desc, step.prompt_defaults, goal)
-        if suggestions:
-            print(f"🔍 LLM suggestions for {step.name} (attempt {attempt}): {suggestions}")
-        else:
-            print(f"🔍 No LLM suggestions for {step.name}; falling back to defaults.")
-        options = _build_locator_options(suggestions, step.locator_defaults)
-        try:
-            click_with_fallbacks(page, options, step.name)
-            if step.post_wait_ms:
-                try:
-                    page.wait_for_timeout(step.post_wait_ms)
-                except Exception:
-                    pass
-            return True
-        except RuntimeError as exc:
-            print(f"  • Step '{step.name}' attempt {attempt} failed: {exc}")
-    return False
+        raise RuntimeError(f"Planning LLM failed: {exc}") from exc
 
 
 def _resolve_goal() -> str:
@@ -416,42 +388,13 @@ def parse_intent(goal: str) -> tuple[str, str]:
     raise ValueError(f"Unable to determine provider/action for goal: {goal!r}")
 
 
-NOTION_CREATE_DATABASE_WORKFLOW: List[StepConfig] = [
-    StepConfig(
-        name="Opened Add new menu",
-        prompt_desc="open the add new menu",
-        prompt_defaults=["Add new", "Create new"],
-        locator_defaults=DEFAULT_ADD_NEW_LABELS,
-        required=False,
-        condition=_looks_like_dashboard,
-        retries=2,
-        post_wait_ms=600,
-    ),
-    StepConfig(
-        name="Clicked Database control",
-        prompt_desc="begin creating a new database",
-        prompt_defaults=["Database", "New database"],
-        locator_defaults=DEFAULT_DATABASE_LABELS,
-        retries=2,
-        post_wait_ms=600,
-    ),
-    StepConfig(
-        name="Clicked Empty database template",
-        prompt_desc="choose an empty database template for the new page",
-        prompt_defaults=["Empty database", "Empty", "Empty page"],
-        locator_defaults=DEFAULT_EMPTY_DATABASE_LABELS,
-        retries=3,
-        post_wait_ms=800,
-    ),
-]
-
 INTEGRATIONS: Dict[tuple[str, str], IntegrationConfig] = {
     ("notion", "create_database"): IntegrationConfig(
         provider="notion",
         action="create_database",
         base_url=NOTION_URL,
         profile_dir=PROFILE_DIR,
-        workflow=NOTION_CREATE_DATABASE_WORKFLOW,
+        label_hints=NOTION_CONTROL_HINTS,
     ),
 }
 
@@ -485,12 +428,71 @@ def main() -> None:
         except PWTimeoutError:
             pass
 
-        for step in config.workflow:
-            success = _run_step(page, step, goal)
-            if not success:
-                if step.required:
-                    raise RuntimeError(f"Required step '{step.name}' failed after {step.retries} attempts.")
-                print(f"⚠️ Optional step '{step.name}' failed; continuing.")
+        history: List[ActionRecord] = []
+        for step_idx in range(1, MAX_ACTIONS + 1):
+            try:
+                plan = _plan_next_action(page, goal, config, history)
+            except RuntimeError as exc:
+                print(f"❌ Planner failure: {exc}")
+                break
+
+            if plan.get("finish"):
+                print(f"🎉 Planner marked goal complete: {plan.get('reason', 'done')}")
+                break
+
+            targets = plan.get("targets") or []
+            if not targets:
+                print(f"❌ Planner returned no targets on iteration {step_idx}.")
+                break
+
+            print(f"🧭 Iteration {step_idx}: {plan.get('reason', 'No reason provided.')}")
+
+            executed = False
+            for target in targets:
+                if target.get("action") != "click":
+                    print(f"  • Unsupported action '{target.get('action')}', skipping.")
+                    continue
+
+                label_variants_raw = target.get("label_variants") or []
+                if isinstance(label_variants_raw, str):
+                    label_variants = [label_variants_raw]
+                else:
+                    label_variants = [str(item) for item in label_variants_raw if isinstance(item, str)]
+                if not label_variants:
+                    print("  • Planner target missing label variants; skipping.")
+                    continue
+
+                locator_hints_raw = target.get("locator_hints") or []
+                if isinstance(locator_hints_raw, str):
+                    locator_hints = [locator_hints_raw]
+                else:
+                    locator_hints = [str(item) for item in locator_hints_raw if isinstance(item, str)]
+                notes = target.get("notes")
+                if notes:
+                    print(f"    ↳ Planner note: {notes}")
+
+                for label in label_variants:
+                    success, message = _attempt_click(page, label, locator_hints)
+                    history.append(ActionRecord(label=label, success=success, message=message))
+                    outcome_icon = "✅" if success else "⚠️"
+                    print(f"    {outcome_icon} Tried '{label}' → {message}")
+                    if success:
+                        executed = True
+                        try:
+                            page.wait_for_timeout(800)
+                        except Exception:
+                            pass
+                        break
+
+                if executed:
+                    break
+
+            if not executed:
+                print("  • All planner suggestions failed; requesting a new plan…")
+                continue
+
+        else:
+            print("⚠️ Reached maximum iterations without planner finishing the task.")
 
         try:
             page.wait_for_load_state("networkidle", timeout=5000)
