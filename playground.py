@@ -19,6 +19,14 @@ DEFAULT_DATABASE_LABELS = [
     ("text contains 'New database'", lambda page: page.get_by_text("New database")),
 ]
 
+DEFAULT_CREATE_NEW_LABELS = [
+    ("button[Create new]", lambda page: page.get_by_role("button", name="Create new")),
+    ("button[New page]", lambda page: page.get_by_role("button", name="New page")),
+    ("link[Create new]", lambda page: page.get_by_role("link", name="Create new")),
+    ("text=Create new", lambda page: page.get_by_text("Create new", exact=True)),
+    ("text contains 'New page'", lambda page: page.get_by_text("New page")),
+]
+
 DEFAULT_EMPTY_TEMPLATE_LABELS = [
     ("button[Empty]", lambda page: page.get_by_role("button", name="Empty")),
     ("link[Empty]", lambda page: page.get_by_role("link", name="Empty")),
@@ -136,6 +144,22 @@ def main() -> None:
         try:
             page.wait_for_load_state("networkidle", timeout=10000)
         except PWTimeoutError:
+            pass
+
+        dom_snapshot = page.content()
+        create_new_suggestions = _suggest_label_candidates(
+            dom_snapshot, "open the create new menu", ["Create new", "New page"]
+        )
+        if create_new_suggestions:
+            print(f"🔍 LLM create-new suggestions: {create_new_suggestions}")
+        create_new_options = _build_locator_options(create_new_suggestions, DEFAULT_CREATE_NEW_LABELS)
+
+        print("➕ Attempting to open the Create new menu…")
+        click_with_fallbacks(create_new_options, "Opened Create new menu")
+
+        try:
+            page.wait_for_timeout(1000)
+        except Exception:
             pass
 
         dom_snapshot = page.content()
