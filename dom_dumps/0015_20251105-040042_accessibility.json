@@ -1,0 +1,209 @@
+{
+  "role": "WebArea",
+  "name": "New page",
+  "children": [
+    {
+      "role": "dialog",
+      "name": "",
+      "modal": true,
+      "children": [
+        {
+          "role": "button",
+          "name": ""
+        },
+        {
+          "role": "text",
+          "name": "Customize Brainstorm Session"
+        },
+        {
+          "role": "text",
+          "name": "Select features to turn on or off"
+        },
+        {
+          "role": "button",
+          "name": "Created by"
+        },
+        {
+          "role": "button",
+          "name": "Priority"
+        },
+        {
+          "role": "button",
+          "name": "Upvote"
+        },
+        {
+          "role": "button",
+          "name": "Status"
+        },
+        {
+          "role": "button",
+          "name": "AI summary AI"
+        },
+        {
+          "role": "button",
+          "name": "Continue"
+        },
+        {
+          "role": "text",
+          "name": "Brainstorm Session"
+        },
+        {
+          "role": "tablist",
+          "name": "",
+          "orientation": "horizontal",
+          "children": [
+            {
+              "role": "tab",
+              "name": "All Ideas",
+              "selected": true,
+              "haspopup": "dialog"
+            },
+            {
+              "role": "tab",
+              "name": "By category",
+              "haspopup": "dialog"
+            }
+          ]
+        },
+        {
+          "role": "button",
+          "name": "Idea",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "button",
+          "name": "Created by",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "button",
+          "name": "Priority",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "button",
+          "name": "Category",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "button",
+          "name": "Upvote",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "button",
+          "name": "Total votes",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "button",
+          "name": "Upvoted by",
+          "disabled": true,
+          "haspopup": "dialog"
+        },
+        {
+          "role": "text",
+          "name": "Launch back to school campaign"
+        },
+        {
+          "role": "image",
+          "name": "SaiVivek Venna"
+        },
+        {
+          "role": "text",
+          "name": "SaiVivek Venna"
+        },
+        {
+          "role": "text",
+          "name": "High"
+        },
+        {
+          "role": "text",
+          "name": "Activation"
+        },
+        {
+          "role": "button",
+          "name": "Upvote",
+          "disabled": true
+        },
+        {
+          "role": "text",
+          "name": "0"
+        },
+        {
+          "role": "text",
+          "name": "Simplify onboarding experience"
+        },
+        {
+          "role": "image",
+          "name": "SaiVivek Venna"
+        },
+        {
+          "role": "text",
+          "name": "SaiVivek Venna"
+        },
+        {
+          "role": "text",
+          "name": "Medium"
+        },
+        {
+          "role": "text",
+          "name": "Conversion"
+        },
+        {
+          "role": "button",
+          "name": "Upvote",
+          "disabled": true
+        },
+        {
+          "role": "text",
+          "name": "0"
+        },
+        {
+          "role": "text",
+          "name": "Improve SEO"
+        },
+        {
+          "role": "image",
+          "name": "SaiVivek Venna"
+        },
+        {
+          "role": "text",
+          "name": "SaiVivek Venna"
+        },
+        {
+          "role": "text",
+          "name": "Low"
+        },
+        {
+          "role": "text",
+          "name": "Top of funnel"
+        },
+        {
+          "role": "button",
+          "name": "Upvote",
+          "disabled": true
+        },
+        {
+          "role": "text",
+          "name": "0"
+        },
+        {
+          "role": "button",
+          "name": "0 hidden properties",
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "role": "text",
+      "name": "By category"
+    }
+  ]
+}

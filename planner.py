@@ -228,6 +228,8 @@ def low_level_plan(
     - If a `css_path` is supplied for the element you want, prefer using that path (optionally with `nth`) because it maps directly to the live DOM.
     - Favor Playwright text selectors such as `text="Database"` or `div:has-text("Database")` when only text is available and no role/aria attribute is present.
     - Only include `wait_for` or `assert_selector` when you can cite a DOM cue (from the current snapshot or stated success criteria) that should appear afterward; otherwise leave them out.
+    - Provide a `"keywords"` array with 1-3 short phrases (button labels, menu items, etc.) that the executor can try; make them human-readable (e.g., `"New page"`, `"Database"`).
+    - When you can point to reliable selectors, include up to three `"fallback_selectors"` entries (e.g., `text="Database"`, `role=button[name='Database']`, fragment css paths) ordered from most to least confident.
     - Before finalizing the JSON, double-check that every attribute you cite (role, aria-label, etc.) is explicitly present in the DOM excerpt or actionable inventory.
     - When the main canvas already shows a creation surface (e.g., a heading like "New page" with quick-start chips such as Database/Form/Templates), treat that as progress and interact with the relevant quick-start control instead of re-triggering navigation.
     - If a dropdown menu listing creation options (Page, Database, Templates, etc.) is open, select the matching item directly (e.g., `div[role='menu'] >> text='Database'`) or dismiss it with Escape before acting elsewhere.
@@ -288,6 +290,8 @@ def low_level_plan(
     "ensure_visible": true/false,
     "target_goal": "string | the immediate observable result this action aims to achieve",
     "message": "string | instruction for human intervention when action=user_prompt",
+    "keywords": ["string"],
+    "fallback_selectors": ["string"],
     "confidence": 0.0-1.0,
     "reasoning": "concise human-readable summary of why this is the best action"
     }}
@@ -320,6 +324,8 @@ def low_level_plan(
     "selector": "button:has-text('Sign in')",
     "expect_navigation": true,
     "wait_for": "input[type='email']",
+    "keywords": ["sign in", "log in"],
+    "fallback_selectors": ["text=\"Sign in\"", "role=button[name='Sign in']"],
     "confidence": 0.9,
     "reasoning": "Email field not visible yet; must first open sign-in form by clicking 'Sign in' button."
     }}
@@ -336,6 +342,8 @@ def low_level_plan(
     "selector": "input[type='email']",
     "value": "robotwebagenttester@gmail.com",
     "assert_selector": "input[value='robotwebagenttester@gmail.com']",
+    "keywords": ["email", "email address"],
+    "fallback_selectors": ["input[type='email']"],
     "confidence": 1.0,
     "reasoning": "Email input field visible; ready to type email."
     }}

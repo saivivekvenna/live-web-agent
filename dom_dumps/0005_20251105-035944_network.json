@@ -1,0 +1,883 @@
+[
+  {
+    "type": "request",
+    "timestamp": 1762333115.97186,
+    "url": "https://www.notion.so/api/v3/getAllSpacePermissionGroupsWithMemberCount",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.9720051,
+    "url": "https://www.notion.so/api/v3/getSpacePermissionGroupIdsContainingMembers",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.972137,
+    "url": "https://www.notion.so/api/v3/getUserNotificationsInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.9722528,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFKP2&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.972353,
+    "url": "https://www.notion.so/api/v3/getPageVisitors",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.972446,
+    "url": "https://www.notion.so/api/v3/getUserSharedPagesInSpace",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.9931939,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.9933598,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.9934661,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333115.993567,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.018262,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.018767,
+    "url": "https://www.notion.so/api/v3/isEmailEducation",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.078379,
+    "url": "https://www.notion.so/api/v3/getExtendedUserProfiles",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.080532,
+    "url": "https://www.notion.so/api/v3/getSpacePermissionGroupIdsContainingMembers",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.0905821,
+    "url": "https://www.notion.so/api/v3/getUserNotificationsInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.0915132,
+    "url": "https://www.notion.so/api/v3/getUserNotificationsFanout",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.0964348,
+    "url": "https://www.notion.so/api/v3/getAllSpacePermissionGroupsWithMemberCount",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.09831,
+    "url": "https://www.notion.so/api/v3/getTrustedDomainsForSpace",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.0997498,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.100255,
+    "url": "https://www.notion.so/api/v3/getUserSharedPagesInSpace",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.108417,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.1108449,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.111958,
+    "url": "https://www.notion.so/api/v3/getPageVisitors",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.125718,
+    "url": "https://www.notion.so/api/v3/isEmailEducation",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.128008,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.172427,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.181447,
+    "url": "https://www.notion.so/api/v3/getExtendedUserProfiles",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.197568,
+    "url": "https://www.notion.so/api/v3/getUserNotificationsFanout",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.239572,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.2408562,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.369239,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.422961,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.423857,
+    "url": "https://www.notion.so/api/v3/getCustomerOffersReceived",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.456099,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.4565299,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.4568079,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.457054,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.459954,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.462882,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.4865549,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.508044,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.532608,
+    "url": "https://www.notion.so/api/v3/getCustomerOffersReceived",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.534462,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.535004,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.666234,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.6884181,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.6895108,
+    "url": "https://www.notion.so/api/v3/listAIConnectors",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.803555,
+    "url": "https://www.notion.so/api/v3/listAIConnectors",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.805598,
+    "url": "https://www.notion.so/api/v3/isEligibleForLanguageSwitchPrompt",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333116.91225,
+    "url": "https://www.notion.so/api/v3/isEligibleForLanguageSwitchPrompt",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333116.9154072,
+    "url": "https://www.notion.so/api/v3/getUnreadInAppMessagesForUser",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333117.0343459,
+    "url": "https://www.notion.so/api/v3/getUnreadInAppMessagesForUser",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333117.049412,
+    "url": "https://www.notion.so/api/v3/listAIConnectors",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333117.068715,
+    "url": "https://www.notion.so/api/v3/saveTransactionsFanout",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333117.1443882,
+    "url": "https://www.notion.so/api/v3/listAIConnectors",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333117.250227,
+    "url": "https://www.notion.so/api/v3/saveTransactionsFanout",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333117.2649999,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFKP2&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333117.2657468,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFKjG&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.072603,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333118.169108,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.51869,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.519499,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.519825,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.52219,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.5225081,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.5259311,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333118.634851,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333119.934665,
+    "url": "https://analytics.google.com/g/collect?v=2&tid=G-9ZJ8CB186L&gtm=45je5b31v876131458z8840392510za200zb840392510zd840392510&_p=1762333114879&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=993014994.1762278491&ul=en-us&sr=1280x720&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&are=1&frm=2&pscdl=noapi&_eu=AAAAAAQ&_s=1&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104684208~104684211~104948813~115480710~115583767~115938466~115938468~116217636~116217638&sid=1762325148&sct=2&seg=1&dl=https%3A%2F%2Faif.notion.so%2Faif-production.html&dt=&en=page_view&up.is_logged_in=false&tfd=5106",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333119.963511,
+    "url": "https://analytics.google.com/g/collect?v=2&tid=G-9ZJ8CB186L&gtm=45je5b31v876131458z8840392510za200zb840392510zd840392510&_p=1762333114879&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=993014994.1762278491&ul=en-us&sr=1280x720&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&are=1&frm=2&pscdl=noapi&_eu=AAAAAAQ&_s=1&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104684208~104684211~104948813~115480710~115583767~115938466~115938468~116217636~116217638&sid=1762325148&sct=2&seg=1&dl=https%3A%2F%2Faif.notion.so%2Faif-production.html&dt=&en=page_view&up.is_logged_in=false&tfd=5106",
+    "status": 204,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333121.952558,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFKjG&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333121.953023,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFLsR&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "method": "POST",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333121.9532568,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFLsT&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333122.0356271,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFLsR&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.2858791,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333122.390744,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.554493,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.555186,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.555731,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.5560262,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.556285,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.556572,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333122.668848,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333123.400419,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=2408deee-ca3f-4371-a507-34b8c388b829&_primuscb=PfJFKBb&EIO=4&transport=polling&t=PfJFLsT&b64=1&sid=mhxVN0PRWgpgzMBYApUn",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333124.6321652,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762333124628&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=41&gz=1",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333124.675951,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762333124628&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=41&gz=1",
+    "status": 202,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333125.333091,
+    "url": "https://www.notion.so/api/v3/getCalendarEvents",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333126.082528,
+    "url": "https://www.notion.so/api/v3/getCalendarEvents",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333129.112662,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333129.213467,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.6204789,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.620985,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.621265,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.621511,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.624341,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.626049,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333130.7128441,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333131.098766,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333131.276413,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333134.627442,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762333134624&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=1&gz=1",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333134.6683378,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762333134624&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=1&gz=1",
+    "status": 202,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.927983,
+    "url": "https://www.notion.so/_assets/896e2255367f2b04.gif",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333146.928332,
+    "url": "https://www.notion.so/_assets/896e2255367f2b04.gif",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.929893,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.930101,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.930327,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.9305348,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.93084,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.931116,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333146.9317288,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/visitors/274aba50-2f9d-4c89-a97b-148856df506d/attributes",
+    "method": "PUT",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333154.33449,
+    "url": "https://api.sprig.com/sdk/1/visitors/274aba50-2f9d-4c89-a97b-148856df506d/events",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333155.347711,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333155.4098759,
+    "url": "https://api.sprig.com/sdk/1/visitors/274aba50-2f9d-4c89-a97b-148856df506d/events",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333155.444798,
+    "url": "https://www.notion.so/api/v3/etClient",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333157.449316,
+    "url": "https://api.sprig.com/sdk/1/visitors/274aba50-2f9d-4c89-a97b-148856df506d/events",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333161.4868789,
+    "url": "https://api.sprig.com/sdk/1/visitors/274aba50-2f9d-4c89-a97b-148856df506d/events",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333169.5571399,
+    "url": "https://api.sprig.com/sdk/1/visitors/274aba50-2f9d-4c89-a97b-148856df506d/events",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333174.8361511,
+    "url": "https://www.notion.so/api/v3/getAssetsJsonV2",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333174.9486668,
+    "url": "https://www.notion.so/api/v3/getAssetsJsonV2",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762333175.1272619,
+    "url": "https://www.notion.so/_assets/b68268645067ada1.gif",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762333175.133325,
+    "url": "https://www.notion.so/_assets/b68268645067ada1.gif",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  }
+]

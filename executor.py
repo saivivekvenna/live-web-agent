@@ -16,6 +16,22 @@ _DOM_SNAPSHOT_COUNTER = count(1)
 NETWORK_LOG_LIMIT = 200
 NETWORK_EXPORT_LIMIT = 120
 CANVAS_EXPORT_LIMIT = 5
+PLAYWRIGHT_SELECTOR_PREFIXES = (
+    "text=",
+    "xpath=",
+    "css=",
+    "id=",
+    "role=",
+    "label=",
+    "name=",
+    "placeholder=",
+    "alt=",
+    "title=",
+    "nth=",
+    "locator=",
+    "has=",
+    "near=",
+)
 
 try:
     from PIL import Image
@@ -345,6 +361,157 @@ def _format_inline(text: Any, limit: int = 160) -> str:
     return collapsed.replace('"', "'")
 
 
+
+def _sanitize_selector(selector: str | None) -> str | None:
+    if not selector:
+        return selector
+
+    def _repl(match: re.Match[str]) -> str:
+        attr = match.group(1).strip()
+        value = match.group(3)
+        value = value.replace('"', '\\"')
+        return f'[{attr}="{value}"]'
+
+    return re.sub(r"\[([^\]=]+)=([\'\"])(.*?)\2\]", _repl, selector)
+
+
+def _escape_hash_identifiers(segment: str) -> str:
+    def _escape_id(match: re.Match[str]) -> str:
+        ident = match.group(1)
+        escaped_ident = re.sub(r"(?<!\\):", r"\\:", ident)
+        return "#" + escaped_ident
+
+    return re.sub(r"#([^\s#\.\>\+\~\[\]]+)", _escape_id, segment or "")
+
+
+def _escape_playwright_selector(selector: str) -> str:
+    if not selector:
+        return selector
+    stripped_selector = selector.strip()
+    if stripped_selector.startswith("//"):
+        return selector
+    if stripped_selector.startswith("css="):
+        prefix, rest = selector.split("=", 1)
+        return f"css={_escape_hash_identifiers(rest)}"
+    parts = selector.split(">>")
+    escaped_parts: List[str] = []
+    for part in parts:
+        trimmed = part.strip()
+        if not trimmed:
+            escaped_parts.append(trimmed)
+            continue
+        if trimmed.startswith(PLAYWRIGHT_SELECTOR_PREFIXES) or trimmed.startswith("//"):
+            escaped_parts.append(trimmed)
+        else:
+            escaped_parts.append(_escape_hash_identifiers(trimmed))
+    return " >> ".join(escaped_parts)
+
+
+def _normalize_selector(selector: str | None) -> str | None:
+    if not selector:
+        return selector
+    sanitized = _sanitize_selector(selector) or selector
+    return _escape_playwright_selector(sanitized)
+
+
+_HAS_TEXT_PATTERN = re.compile(r":has-text\((?:\"|')(.*?)(?:\"|')\)")
+
+
+def _wait_condition_already_true(selector: str, context_snapshot: Dict[str, Any]) -> bool:
+    if not selector:
+        return False
+    dom_html = context_snapshot.get("dom") or ""
+    rendered_text = context_snapshot.get("rendered_text") or ""
+
+    if selector in dom_html:
+        return True
+
+    match = _HAS_TEXT_PATTERN.search(selector)
+    if match:
+        probe = match.group(1)
+        if probe and (probe in dom_html or probe in rendered_text):
+            return True
+
+    if selector.startswith("text="):
+        probe = selector[len("text="):].strip("\"'")
+        if probe and (probe in dom_html or probe in rendered_text):
+            return True
+
+    simple_match = re.search(r'text\("([^"]+)"\)', selector)
+    if simple_match:
+        probe = simple_match.group(1)
+        if probe and (probe in dom_html or probe in rendered_text):
+            return True
+
+    return False
+
+
+def _sanitize_postconditions(action: Dict[str, Any], context_snapshot: Dict[str, Any]) -> tuple[Dict[str, Any], Dict[str, str]]:
+    adjustments: Dict[str, str] = {}
+    wait_for = action.get("wait_for")
+    if isinstance(wait_for, str) and _wait_condition_already_true(wait_for, context_snapshot):
+        adjustments["wait_for"] = wait_for
+        action.pop("wait_for", None)
+
+    assert_selector = action.get("assert_selector")
+    if isinstance(assert_selector, str) and _wait_condition_already_true(assert_selector, context_snapshot):
+        adjustments["assert_selector"] = assert_selector
+        action.pop("assert_selector", None)
+
+    return action, adjustments
+
+
+def _extract_action_keywords(step: Dict[str, Any], action: Dict[str, Any]) -> List[str]:
+    sources = [
+        step.get("goal"),
+        step.get("intent"),
+        step.get("description"),
+        action.get("target_goal"),
+        action.get("reasoning"),
+        action.get("selector"),
+    ]
+    keywords: List[str] = []
+    seen: set[str] = set()
+    stopwords = {"text", "button", "link", "div", "span", "selector", "input"}
+
+    def add_candidate(text: str) -> None:
+        if not text:
+            return
+        text = text.strip().lower()
+        if len(text) < 3:
+            return
+        if text in stopwords:
+            return
+        if text in seen:
+            return
+        seen.add(text)
+        keywords.append(text)
+
+    for kw in action.get("keywords") or []:
+        if isinstance(kw, str):
+            add_candidate(kw)
+
+    for fallback in action.get("fallback_selectors") or []:
+        if not isinstance(fallback, str):
+            continue
+        for match in re.findall(r'"([^"]+)"|\'([^\']+)\'', fallback):
+            phrase = next((m for m in match if m), "")
+            add_candidate(phrase)
+        for token in re.split(r'[^A-Za-z0-9\+]+', fallback):
+            add_candidate(token)
+
+    for source in sources:
+        if not source:
+            continue
+        for match in re.findall(r'"([^"]+)"|\'([^\']+)\'', source):
+            phrase = next((m for m in match if m), "")
+            add_candidate(phrase)
+        tokens = re.split(r'[^A-Za-z0-9\+]+', source)
+        for token in tokens:
+            add_candidate(token)
+
+    return keywords[:8]
+
 def build_dom_filter_snapshot(
     context: Dict[str, Any],
     text_limit: int = 15000,
@@ -482,9 +649,9 @@ def build_dom_filter_snapshot(
 
     return "\n".join(lines)
 
-def execute_action(page, action_json):
-    """Executes a low-level JSON action on a Playwright page."""
-    action = json.loads(action_json)
+
+def execute_action(page, action: Dict[str, Any], context_snapshot: Dict[str, Any] | None = None):
+    """Executes a low-level action on a Playwright page with locator fallbacks."""
     a = action.get("action")
     sel = action.get("selector")
     val = action.get("value")
@@ -493,20 +660,8 @@ def execute_action(page, action_json):
 
     print(f"🔹 Executing: {a} -> {sel or val or key}")
 
-    def _sanitize_selector(selector: str | None) -> str | None:
-        if not selector:
-            return selector
-
-        def _repl(match):
-            attr = match.group(1).strip()
-            value = match.group(3)
-            value = value.replace('"', '\\"')
-            return f'[{attr}="{value}"]'
-
-        return re.sub(r"\[([^\]=]+)=([\'\"])(.*?)\2\]", _repl, selector)
-
     def _resolve_locator(selector: str):
-        normalized = _sanitize_selector(selector) or selector
+        normalized = _normalize_selector(selector) or selector
         locator = page.locator(normalized)
         if "nth" in action and isinstance(action["nth"], int):
             locator = locator.nth(action["nth"])
@@ -518,26 +673,146 @@ def execute_action(page, action_json):
             locator = locator.first
         return locator
 
+    def _collect_fragment_locators(keywords: List[str]) -> List[tuple[str, callable]]:
+        locators: List[tuple[str, callable]] = []
+        if not context_snapshot:
+            return locators
+        for item in context_snapshot.get("actionables") or []:
+            if not isinstance(item, dict):
+                continue
+            if not item.get("is_fragment"):
+                continue
+            css_path = item.get("css_path")
+            if not css_path:
+                continue
+            text = (item.get("text") or "").strip()
+            if keywords:
+                lowered = text.lower()
+                if not any(kw in lowered for kw in keywords):
+                    continue
+            normalized = _normalize_selector(css_path) or css_path
+            desc = f"fragment[{text or css_path}]"
+            locators.append((desc, lambda norm=normalized: page.locator(norm)))
+        return locators
+
+    def _collect_keyword_locators(keywords: List[str]) -> List[tuple[str, callable]]:
+        locators: List[tuple[str, callable]] = []
+        seen: set[str] = set()
+        for kw in keywords:
+            kw = kw.strip()
+            if not kw:
+                continue
+            for desc, builder in (
+                (f"button(name~='{kw}')", lambda kw=kw: page.get_by_role("button", name=kw, exact=False)),
+                (f"link(name~='{kw}')", lambda kw=kw: page.get_by_role("link", name=kw, exact=False)),
+                (f"text~='{kw}'", lambda kw=kw: page.get_by_text(kw, exact=False)),
+            ):
+                if desc in seen:
+                    continue
+                seen.add(desc)
+                locators.append((desc, builder))
+        return locators
+
+    def _click_with_fallbacks() -> tuple[bool, str | None]:
+        raw_keywords: List[str] = []
+        for source in (action.get("keywords"), action.get("_keywords")):
+            if not source:
+                continue
+            raw_keywords.extend([kw for kw in source if isinstance(kw, str)])
+        keywords: List[str] = []
+        seen_kw: set[str] = set()
+        for kw in raw_keywords:
+            kw_norm = kw.strip().lower()
+            if not kw_norm or kw_norm in seen_kw:
+                continue
+            seen_kw.add(kw_norm)
+            keywords.append(kw)
+        candidates: List[tuple[str, callable]] = []
+        seen_desc: set[str] = set()
+
+        if sel:
+            normalized_selector = _normalize_selector(sel) or sel
+            desc = f"planner selector [{sel}]"
+            candidates.append((desc, lambda norm=normalized_selector: page.locator(norm)))
+            seen_desc.add(desc)
+
+        fallback_selectors = [
+            fs for fs in (action.get("fallback_selectors") or []) if isinstance(fs, str)
+        ]
+        for idx, fallback in enumerate(fallback_selectors, start=1):
+            normalized_fallback = _normalize_selector(fallback) or fallback
+            desc = f"fallback_selector[{idx}]"
+            if desc not in seen_desc:
+                candidates.append((desc, lambda norm=normalized_fallback: page.locator(norm)))
+                seen_desc.add(desc)
+
+        for desc, builder in _collect_fragment_locators(keywords):
+            if desc not in seen_desc:
+                candidates.append((desc, builder))
+                seen_desc.add(desc)
+
+        for desc, builder in _collect_keyword_locators(keywords):
+            if desc not in seen_desc:
+                candidates.append((desc, builder))
+                seen_desc.add(desc)
+
+        if not candidates and sel:
+            normalized_selector = _normalize_selector(sel) or sel
+            candidates.append((f"planner selector [{sel}]", lambda norm=normalized_selector: page.locator(norm)))
+
+        ensure_visible = action.get("ensure_visible", True)
+        ensure_state = action.get("ensure_state", "visible")
+        click_kwargs_base = {"timeout": timeout}
+        if "button" in action:
+            click_kwargs_base["button"] = action["button"]
+        if "click_count" in action:
+            click_kwargs_base["click_count"] = action["click_count"]
+        if "modifiers" in action:
+            click_kwargs_base["modifiers"] = action["modifiers"]
+        if action.get("force"):
+            click_kwargs_base["force"] = True
+
+        last_error: Exception | None = None
+
+        for desc, builder in candidates:
+            try:
+                locator = builder()
+                count = locator.count()
+                if count == 0:
+                    print(f"  • {desc}: no matches")
+                    continue
+                target = locator.first
+                if ensure_visible:
+                    target.wait_for(state=ensure_state, timeout=timeout)
+                click_kwargs = dict(click_kwargs_base)
+                try:
+                    target.click(**click_kwargs)
+                    print(f"✅ Click succeeded via {desc}")
+                    return True, None
+                except Exception as click_error:
+                    msg = str(click_error)
+                    if "intercepts pointer events" in msg and not click_kwargs.get("force"):
+                        print(f"  🔧 Overlay via {desc}; retrying with force=True")
+                        click_kwargs["force"] = True
+                        target.click(**click_kwargs)
+                        print(f"✅ Click succeeded via {desc} (force)")
+                        return True, None
+                    print(f"  • {desc} failed: {click_error}")
+                    last_error = click_error
+            except Exception as exc:
+                print(f"  • {desc} failed: {exc}")
+                last_error = exc
+
+        error_msg = str(last_error) if last_error else "No viable locator candidates"
+        return False, error_msg
+
     try:
         if a == "navigate":
             page.goto(action["url"], wait_until="load")
         elif a == "click":
-            if not sel:
-                raise ValueError("Click action requires a selector.")
-            locator = _resolve_locator(sel)
-            if action.get("ensure_visible", True):
-                ensure_state = action.get("ensure_state", "visible")
-                locator.wait_for(state=ensure_state, timeout=timeout)
-            click_kwargs = {"timeout": timeout}
-            if "button" in action:
-                click_kwargs["button"] = action["button"]
-            if "click_count" in action:
-                click_kwargs["click_count"] = action["click_count"]
-            if action.get("force"):
-                click_kwargs["force"] = True
-            if "modifiers" in action:
-                click_kwargs["modifiers"] = action["modifiers"]
-            locator.click(**click_kwargs)
+            success, error = _click_with_fallbacks()
+            if not success:
+                return False, error
         elif a == "type":
             if not sel:
                 raise ValueError("Type action requires a selector.")
@@ -618,16 +893,16 @@ def execute_action(page, action_json):
         elif a == "wait":
             wait_for = action.get("wait_for")
             if wait_for:
-                sanitized_wait_for = _sanitize_selector(wait_for) or wait_for
-                page.wait_for_selector(sanitized_wait_for, timeout=timeout, state=action.get("wait_state", "visible"))
+                normalized_wait_for = _normalize_selector(wait_for) or wait_for
+                page.wait_for_selector(normalized_wait_for, timeout=timeout, state=action.get("wait_state", "visible"))
             else:
                 time.sleep(action.get("duration", timeout / 1000))
         elif a == "assert":
             assert_selector = action.get("assert_selector")
             if not assert_selector:
                 raise ValueError("Assert action requires 'assert_selector'.")
-            sanitized_assert = _sanitize_selector(assert_selector) or assert_selector
-            page.wait_for_selector(sanitized_assert, timeout=timeout, state=action.get("wait_state", "visible"))
+            normalized_assert = _normalize_selector(assert_selector) or assert_selector
+            page.wait_for_selector(normalized_assert, timeout=timeout, state=action.get("wait_state", "visible"))
         elif a == "user_prompt":
             prompt_message = action.get("message") or "Human intervention required. Complete the necessary steps and press Enter."
             print(f"🛑 Human action needed: {prompt_message}")
@@ -643,8 +918,8 @@ def execute_action(page, action_json):
         wait_for_selector = action.get("wait_for")
         if wait_for_selector:
             wait_state = action.get("wait_state", "visible")
-            sanitized_wait_for = _sanitize_selector(wait_for_selector) or wait_for_selector
-            page.wait_for_selector(sanitized_wait_for, timeout=timeout, state=wait_state)
+            normalized_wait_for = _normalize_selector(wait_for_selector) or wait_for_selector
+            page.wait_for_selector(normalized_wait_for, timeout=timeout, state=wait_state)
 
         return True, None
     except Exception as e:
@@ -1502,7 +1777,18 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                         f"  🔁 Using fragment selector for '{fragment_patch['text']}': {fragment_patch['selector']}"
                     )
 
-                patched_action_json = json.dumps(action_data)
+                action_data, postcondition_adjustments = _sanitize_postconditions(
+                    action_data, page_context_before
+                )
+                if postcondition_adjustments:
+                    removed = ", ".join(
+                        f"{key}='{value}'" for key, value in postcondition_adjustments.items()
+                    )
+                    print(f"  🧹 Removed pre-existing postconditions: {removed}")
+
+                keywords = _extract_action_keywords(step, action_data)
+                if keywords:
+                    action_data["_keywords"] = keywords
 
                 add_recall({
                     "type": "low_level_decision",
@@ -1513,10 +1799,12 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     "selector": action_data.get("selector"),
                     "value": action_data.get("value"),
                     "patched_selector": fragment_patch,
+                    "postcondition_adjustments": postcondition_adjustments,
                     "timestamp": time.time()
                 })
 
-                action_success, action_error = execute_action(page, patched_action_json)
+                action_success, action_error = execute_action(page, action_data, page_context_before)
+                action_data.pop("_keywords", None)
 
                 screenshot_path = f"step_{step_id}_iter{attempt}_{action_data.get('action', 'unknown')}.png"
                 page.screenshot(path=screenshot_path, full_page=True)
@@ -1557,7 +1845,8 @@ def iteration(plan_json: str, max_low_level_rounds: int = 5):
                     "success": action_success,
                     "human_prompt": action_data.get("message"),
                     "error": action_error,
-                    "patched_selector": fragment_patch
+                    "patched_selector": fragment_patch,
+                    "postcondition_adjustments": postcondition_adjustments
                 }
 
                 if not action_success:

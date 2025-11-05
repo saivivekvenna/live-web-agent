@@ -1,0 +1,189 @@
+URL: https://www.notion.so/2a16451b7fe28069a203c5240935f616
+TITLE: New page
+META_TAGS:
+  - meta-1: 
+  - viewport: width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover
+  - description: A tool that connects everyday work into one space. It gives you and your teams AI tools—search, writing, note-taking—inside an all-in-one, flexible workspace.
+  - twitter:card: summary_large_image
+  - twitter:site: @NotionHQ
+  - twitter:title: The AI workspace that works for you. | Notion
+  - twitter:description: A tool that connects everyday work into one space. It gives you and your teams AI tools—search, writing, note-taking—inside an all-in-one, flexible workspace.
+  - twitter:url: https://www.notion.so
+  - twitter:image: https://www.notion.so/images/meta/default.png
+  - og:site_name: Notion
+  - og:type: website
+  - og:url: https://www.notion.so
+  - og:title: The AI workspace that works for you. | Notion
+  - og:description: A tool that connects everyday work into one space. It gives you and your teams AI tools—search, writing, note-taking—inside an all-in-one, flexible workspace.
+  - og:image: https://www.notion.so/images/meta/default.png
+  - og:locale: en_US
+  - mobile-web-app-capable: yes
+  - apple-itunes-app: app-id=1232780281
+  - format-detection: telephone=no
+  - msapplication-tap-highlight: no
+INTERACTABLE_CATEGORIES:
+  - FOCUSABLE: SaiVivek Venna's Notion (total captured=42)
+  - BUTTON: SaiVivek Venna's Notion (total captured=37)
+  - INPUT: Add icon Add cover Add comment Get started with Ask AI AI Meeting Notes Database Form Templates (total captured=2)
+  - LINK: Home; Meetings; Notion AI (total captured=4)
+  - FRAGMENT: SaiVivek Venna's Notion; New page; Private (total captured=41)
+FRAGMENT_CANDIDATES:
+  [1] text="SaiVivek Venna's Notion" tag=div selector="div > div > div > div > div:nth-of-type(2) > div > div > div" source="div > div > div > div:nth-of-type(4) > div > div > div > div"
+  [2] text="New page" tag=div selector="div:nth-of-type(2) > header > div > div > div > div > div > div" source="div > div:nth-of-type(2) > header > div > div > div > div > div"
+  [3] text="Private" tag=span selector="header > div > div > div > div > div:nth-of-type(2) > div > span" source="div:nth-of-type(2) > header > div > div > div > div > div:nth-of-type(2) > div"
+  [4] text="Search" tag=div selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2)" source="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div > div"
+  [5] text="Search" tag=div selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2)" source="div > div > nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2)"
+  [6] text="Home" tag=div selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > a > div > div:nth-of-type(2)" source="div > div > nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2)"
+  [7] text="Meetings" tag=div selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a > div > div:nth-of-type(2) > div" source="div > div > nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2)"
+  [8] text="Notion AI" tag=div selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(4) > a > div > div:nth-of-type(2) > div" source="div > div > nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2)"
+  [9] text="Inbox" tag=div selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(5) > div > div > div:nth-of-type(2)" source="div > div > nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2)"
+  [10] text="Get started with" tag=div selector="div#:r8: > div:nth-of-type(2) > div > div" source="main#main > div > div > div:nth-of-type(3)"
+  [11] text="Ask AI" tag=div selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div > div > div" source="main#main > div > div > div:nth-of-type(3)"
+  [12] text="AI Meeting Notes" tag=div selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div" source="main#main > div > div > div:nth-of-type(3)"
+  [13] text="Database" tag=div selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div > div > div" source="main#main > div > div > div:nth-of-type(3)"
+  [14] text="Form" tag=div selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div" source="main#main > div > div > div:nth-of-type(3)"
+  [15] text="Templates" tag=div selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(5) > div > div > div" source="main#main > div > div > div:nth-of-type(3)"
+  [16] text="Home" tag=div selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > a > div > div:nth-of-type(2)" source="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > a"
+  [17] text="Meetings" tag=div selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a > div > div:nth-of-type(2) > div" source="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a"
+  [18] text="Notion AI" tag=div selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(4) > a > div > div:nth-of-type(2) > div" source="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(4) > a"
+  [19] text="Inbox" tag=div selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(5) > div > div > div:nth-of-type(2)" source="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(5) > div"
+  [20] text="Shared" tag=span selector="div#:r3: > span" source="div#:r3:"
+INTERACTABLES:
+  [1] <div> text="SaiVivek Venna's Notion" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div > div > div > div:nth-of-type(2) > div > div > div"
+  [2] <div> text="New page" role=button visible=True disabled=False cats=button,focusable,fragment selector="div:nth-of-type(2) > header > div > div > div > div > div > div"
+  [3] <span> text="Private" role=button visible=True disabled=False cats=button,focusable,fragment selector="header > div > div > div > div > div:nth-of-type(2) > div > span"
+  [4] <div> text="Search" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2)"
+  [5] <div> text="Search" visible=True disabled=False cats=button,fragment selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > div > div:nth-of-type(2)"
+  [6] <div> text="Home" visible=True disabled=False cats=button,fragment selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > a > div > div:nth-of-type(2)"
+  [7] <div> text="Meetings" visible=True disabled=False cats=button,fragment selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a > div > div:nth-of-type(2) > div"
+  [8] <div> text="Notion AI" visible=True disabled=False cats=button,fragment selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(4) > a > div > div:nth-of-type(2) > div"
+  [9] <div> text="Inbox" visible=True disabled=False cats=button,fragment selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(5) > div > div > div:nth-of-type(2)"
+  [10] <div> text="Get started with" role=textbox visible=True disabled=False cats=input,focusable,fragment selector="div#:r8: > div:nth-of-type(2) > div > div"
+  [11] <div> text="Ask AI" role=textbox visible=True disabled=False cats=input,focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div > div > div"
+  [12] <div> text="AI Meeting Notes" role=textbox visible=True disabled=False cats=input,focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div"
+  [13] <div> text="Database" role=textbox visible=True disabled=False cats=input,focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div > div > div"
+  [14] <div> text="Form" role=textbox visible=True disabled=False cats=input,focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div"
+  [15] <div> text="Templates" role=textbox visible=True disabled=False cats=input,focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(5) > div > div > div"
+  [16] <div> text="Home" role=link href="https://www.notion.so/98b7bd06c83e4638a365c45f503506ed?pvs=16" visible=True disabled=False cats=link,focusable,fragment selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > a > div > div:nth-of-type(2)"
+  [17] <div> text="Meetings" role=link href="https://www.notion.so/meet" visible=True disabled=False cats=link,focusable,fragment selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a > div > div:nth-of-type(2) > div"
+  [18] <div> text="Notion AI" role=link href="https://www.notion.so/ai" visible=True disabled=False cats=link,focusable,fragment selector="div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(4) > a > div > div:nth-of-type(2) > div"
+  [19] <div> text="Inbox" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(5) > div > div > div:nth-of-type(2)"
+  [20] <span> text="Shared" role=button id=":r3:" visible=True disabled=False cats=button,focusable,fragment selector="div#:r3: > span"
+  [21] <span> text="Shared" visible=True disabled=False cats=button,fragment selector="div#:r3: > span"
+  [22] <div> text="Start collaborating" visible=True disabled=False cats=button,fragment selector="div:nth-of-type(2) > div > div > div > div > div:nth-of-type(3) > div > div:nth-of-type(2)"
+  [23] <div> text="Start collaborating" role=button visible=True disabled=False cats=button,focusable,fragment selector="div:nth-of-type(2) > div > div > div > div > div:nth-of-type(3) > div > div:nth-of-type(2)"
+  [24] <span> text="Private" role=button id=":r5:" visible=True disabled=False cats=button,focusable,fragment selector="div#:r5: > span"
+  [25] <span> text="Private" visible=True disabled=False cats=button,fragment selector="div#:r5: > span"
+  [26] <div> text="Settings" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2)"
+  [27] <div> text="Marketplace" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(2)"
+  [28] <div> text="Trash" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div:nth-of-type(2) > div:nth-of-type(3) > div > div > div > div > div:nth-of-type(2)"
+  [29] <div> text="Get started with" role=menu id=":r8:" visible=True disabled=True cats=focusable,fragment selector="div#:r8: > div:nth-of-type(2) > div > div"
+  [30] <div> text="Ask AI" role=menu id=":r8:" visible=True disabled=True cats=focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div > div > div"
+  [31] <div> text="AI Meeting Notes" role=menu id=":r8:" visible=True disabled=True cats=focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div"
+  [32] <div> text="Database" role=menu id=":r8:" visible=True disabled=True cats=focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div > div > div"
+  [33] <div> text="Form" role=menu id=":r8:" visible=True disabled=True cats=focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div"
+  [34] <div> text="Templates" role=menu id=":r8:" visible=True disabled=True cats=focusable,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(5) > div > div > div"
+  [35] <div> text="Ask AI" visible=True disabled=False cats=button,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div > div > div"
+  [36] <div> text="AI Meeting Notes" visible=True disabled=False cats=button,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div"
+  [37] <div> text="Database" visible=True disabled=False cats=button,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(3) > div > div > div"
+  [38] <div> text="Form" visible=True disabled=False cats=button,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div > div > div"
+  [39] <div> text="Templates" visible=True disabled=False cats=button,fragment selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(5) > div > div > div"
+  [40] <div> text="Invite members" role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div > div > div > div > div > div > div"
+  [41] <div> text="Collaborate with your team." role=button visible=True disabled=False cats=button,focusable,fragment selector="div > div > div > div > div > div > div > div:nth-of-type(2)"
+  [42] <div> role=separator visible=True disabled=False cats=focusable selector="div > nav > div > div > div > div:nth-of-type(5) > div > div"
+  [43] <div> text="SaiVivek Venna's Notion" role=button visible=True disabled=False cats=button,focusable selector="div > div > div > div:nth-of-type(4) > div > div > div > div"
+  [44] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div > div > div:nth-of-type(2) > div > div > div"
+  [45] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div"
+  [46] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div"
+  [47] <div> text="Share" role=button visible=True disabled=False cats=button,focusable selector="div > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div > div"
+  [48] <div> role=button visible=True disabled=False cats=button,focusable selector="header > div > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div"
+  [49] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(4) > div > div"
+  [50] <div> text="New page" role=button visible=True disabled=False cats=button,focusable selector="div > div:nth-of-type(2) > header > div > div > div > div > div"
+  [51] <div> text="Private" role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(2) > header > div > div > div > div > div:nth-of-type(2) > div"
+  [52] <div> text="Search" role=button visible=True disabled=False cats=button,focusable selector="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div > div"
+  [53] <div> text="Search Home Meetings Notion AI Inbox" visible=True disabled=False cats=button selector="div > div > nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2)"
+  [54] <div> text="Add icon Add cover Add comment Get started with Ask AI AI Meeting Notes Database Form Templates" role=textbox visible=True disabled=False cats=input,focusable selector="main#main > div > div > div:nth-of-type(3)"
+  [55] <a> text="Home" role=link href="https://www.notion.so/98b7bd06c83e4638a365c45f503506ed?pvs=16" visible=True disabled=False cats=link,focusable selector="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(2) > a"
+  [56] <a> text="Meetings" role=link href="https://www.notion.so/meet" visible=True disabled=False cats=link,focusable selector="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(3) > a"
+  [57] <a> text="Notion AI" role=link href="https://www.notion.so/ai" visible=True disabled=False cats=link,focusable selector="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(4) > a"
+  [58] <h1> placeholder="New page" visible=True disabled=False cats=input,focusable selector="div > div:nth-of-type(3) > div > div > div:nth-of-type(2) > div > div > h1"
+  [59] <div> text="Inbox" role=button visible=True disabled=False cats=button,focusable selector="nav > div > div > div > div:nth-of-type(4) > div:nth-of-type(2) > div:nth-of-type(5) > div"
+  [60] <div> text="Shared" role=button id=":r3:" visible=True disabled=False cats=button,focusable selector="div#:r3:"
+  [61] <div> text="Shared Start collaborating" visible=True disabled=False cats=button selector="div > div:nth-of-type(4) > div:nth-of-type(4) > div > div:nth-of-type(2) > div > div > div"
+  [62] <div> role=button visible=True disabled=True cats=button,focusable selector="div#:r3: > div > div > div:nth-of-type(2) > div"
+  [63] <div> text="Start collaborating" role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(4) > div > div:nth-of-type(2) > div > div > div > div > div:nth-of-type(3)"
+  [64] <div> text="Private" role=button id=":r5:" visible=True disabled=False cats=button,focusable selector="div#:r5:"
+  [65] <div> text="Private" visible=True disabled=False cats=button selector="div > div:nth-of-type(4) > div:nth-of-type(4) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2)"
+  [66] <div> role=button visible=True disabled=True cats=button,focusable selector="div#:r5: > div > div > div:nth-of-type(2) > div > div"
+  [67] <div> role=button visible=True disabled=True cats=button,focusable selector="div#:r5: > div > div > div:nth-of-type(2) > div:nth-of-type(2) > div"
+  [68] <div> text="Settings" role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(4) > div:nth-of-type(4) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div"
+  [69] <div> text="Marketplace" role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(4) > div:nth-of-type(4) > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div"
+  [70] <div> text="Trash" role=button visible=True disabled=False cats=button,focusable selector="div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(3) > div > div > div"
+  [71] <div> text="Get started with Ask AI AI Meeting Notes Database Form Templates" role=menu id=":r8:" visible=True disabled=True cats=focusable selector="div#:r8:"
+  [72] <div> text="Ask AI AI Meeting Notes Database Form Templates" visible=True disabled=False cats=button selector="div#:r8: > div:nth-of-type(2) > div > div:nth-of-type(2)"
+  [73] <div> text="Invite members Collaborate with your team." role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div"
+  [74] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div > div:nth-of-type(2)"
+  [75] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div:nth-of-type(4) > div > div > div > div > div"
+  [76] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div:nth-of-type(4) > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div"
+  [77] <div> role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(4) > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div:nth-of-type(2) > div > div"
+  [78] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div > div:nth-of-type(4) > div:nth-of-type(5) > div:nth-of-type(2) > div > div > div:nth-of-type(3)"
+  [79] <div> role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(4) > div:nth-of-type(5) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div"
+  [80] <div> role=button visible=True disabled=False cats=button,focusable selector="div > div:nth-of-type(4) > div:nth-of-type(5) > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div"
+  [81] <div> role=button visible=True disabled=False cats=button,focusable selector="div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > div"
+  [82] <a> text="Skip to content" role=link href="https://www.notion.so/2a16451b7fe28069a203c5240935f616#main" id="skip-to-content" visible=False disabled=False cats=link,focusable selector="a#skip-to-content"
+  [83] <div> text="Edited 16h ago" role=button visible=False disabled=False cats=button,focusable selector="div > div:nth-of-type(3) > div:nth-of-type(2) > div > div > div > div > div"
+  [84] <iframe> visible=False disabled=False cats=focusable selector="html > body > iframe"
+  [85] <div> text="Add icon" role=button visible=False disabled=True cats=button,focusable selector="div > div:nth-of-type(3) > div > div > div > div:nth-of-type(2) > div > div"
+  [86] <div> text="Add cover" role=button visible=False disabled=True cats=button,focusable selector="div > div:nth-of-type(3) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(2)"
+  [87] <div> text="Add comment" role=button visible=False disabled=True cats=button,focusable selector="div > div:nth-of-type(3) > div > div > div > div:nth-of-type(2) > div > div:nth-of-type(3)"
+VISIBLE_TEXT_BLOCKS:
+  [1] <span> text="Shared" selector="div#:r3: > span"
+  [2] <span> text="Private" selector="div#:r5: > span"
+RENDERED_TEXT_EXCERPT:
+Skip to content
+SaiVivek Venna's Notion
+Search
+Home
+Meetings
+Notion AI
+Inbox
+Shared
+Start collaborating
+Private
+Settings
+Marketplace
+Trash
+Invite members
+Collaborate with your team.
+New page
+Private
+Share
+Add icon
+Add cover
+Add comment
+Get started with
+Ask AI
+AI Meeting Notes
+Database
+Form
+Templates
+By category
+DOM_HTML_EXCERPT:
+<!DOCTYPE html><html class="notion-html" data-notion-html="web" data-notion-version="23.13.20251105.0410" lang="en" style="--full-viewport-height: 720px; --direction: 1; --crop-mask-color: var(--c-whi); --crop-mask-opacity: 0.5;"><head lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><script async="" src="https://code.gist.build/web/latest/gist.min.js"></script><script async="" src="https://assets.customer.io/assets/in-app.js"></script><script>(function(){var e,r=window.navigator.userAgent,t=/Windows.*Edge/i.test(r),i=!t&&/Chrome/i.test(r);if(i){if((e=r.match(/Chrome\/(\d+)/i))&&e[1])return parseInt(e[1],10)<=84}else if(t||i||!/Safari/i.test(r))if(/Firefox/i.test(r)){if((e=r.match(/Firefox\/(\d+)/i))&&e[1])return parseInt(e[1],10)<=114}else{if(t)return!0;if(/Trident/i.test(r))return!0}else if((e=r.match(/Version\/(\d+)/i))&&e[1])return parseInt(e[1],10)<=13;return!1})()&&window.location.replace("/unsupported-browser.html")</script><script>window.__webStartTime=performance.now(),performance.mark("__webStartTime")</script><script>try{if(Math.random()<.01){["/blank","/login","/meeting-notification","/quick-search"].includes(window.location.pathname)||(window.CLIENT_LOAD_TAG=Math.random().toString(16).substring(2),fetch("/api/v3/recordClientLoadAttempt",{method:"POST",headers:{"Content-Type":"application/json; charset=utf-8"},body:JSON.stringify({tag:window.CLIENT_LOAD_TAG,pathname:window.location.pathname,hostname:window.location.hostname,version:"23.13.20251105.0410",htmlType:"web"}),priority:"low"}))}}catch(t){console.error("Failed to beacon load attempt",t)}</script><title>New page</title><meta name="description" content="A tool that connects everyday work into one space. It gives you and your teams AI tools—search, writing, note-taking—inside an all-in-one, flexible workspace."><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content="@NotionHQ"><meta name="twitter:title" content="The AI workspace that works for you. | Notion"><meta name="twitter:description" content="A tool that connects everyday work into one space. It gives you and your teams AI tools—search, writing, note-taking—inside an all-in-one, flexible workspace."><meta name="twitter:url" content="https://www.notion.so"><meta name="twitter:image" content="https://www.notion.so/images/meta/default.png"><meta property="og:site_name" content="Notion"><meta property="og:type" content="website"><meta property="og:url" content="https://www.notion.so"><meta property="og:title" content="The AI workspace that works for you. | Notion"><meta property="og:description" content="A tool that connects everyday work into one space. It gives you and your teams AI tools—search, writing, note-taking—inside an all-in-one, flexible workspace."><meta property="og:image" content="https://www.notion.so/images/meta/default.png"><meta property="og:locale" content="en_US"><meta name="mobile-web-app-capable" content="yes"><meta property="apple-itunes-app" content="app-id=1232780281"><link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico"><link rel="apple-touch-icon" href="/images/logo-ios.png"><meta name="format-detection" content="telephone=no"><meta name="msapplication-tap-highlight" content="no"><meta name="robots" content="noindex"><link href="/print.e2ba4c31.css" rel="stylesheet" media="print"><style>body{background:#fff}body.dark{background:#191919}@keyframes startup-shimmer-animation{0%{transform:translateX(-100%) translateZ(0)}100%{transform:translateX(100%) translateZ(0)}}@keyframes startup-shimmer-fade-in{0%{opacity:0}100%{opacity:1}}@keyframes startup-spinner-rotate{0%{transform:rotate(0) translateZ(0)}100%{transform:rotate(360deg) translateZ(0)}}#initial-loading-spinner{position:fixed;height:100vh;width:100vw;z-index:-1;display:none;align-items:center;justify-content:center}#initial-loading-spinner .spinner{position:relative;display:inline-block;height:22px;width:22px;pointer-events:none}#initial-loading-spinner .spinner__circle{position:absolute;top:0;left:0;width:22px;height:22px;border-radius:50%;border:2px solid rgba(28,19,1,.11)}.dark #initial-loading-spinner .spinner__circle{border-color:rgba(255,255,235,.1)}#initial-loading-spinner .spinner__arc{position:absolute;top:0;left:0;width:22px;height:22px;border-radius:50%;border-top:2px solid #30302e;border-right:2px solid #30302e;border-bottom:2px solid transparent;border-left:2px solid transparent;mask:linear-gradient(90deg,transparent 66.66%,#000 66.66%);animation:startup-spinner-rotate 1.2s linear infinite}.dark #initial-loading-spinner .spinner__arc{border-color:#f0efed}#skeleton{background:#fff;position:fixed;height:100vh;width:100vw;z-index:-1;display:none;overflow:hidden}#initial-loading-spinner.show,#skeleton.show{display:flex}body.dark #skeleton{background:#191919}.notion-front-page #skeleton,.notion-mobile #skeleton{display:none}#skeleton-sidebar{background-color:#f9f8f7;box-shadow:inset calc(var(--direction,1) * -1px) 0 0 0 #eeeeec;display:flex;width:240px;flex-direction:column;padding:12px 14px;overflow:hidden}body.dark #skeleton-sidebar{background-color:#202020;box-shadow:inset calc(var(--direction,1) * -1px) 0 0 0 #2a2a2a}#skeleton.isElectron #skeleton-sidebar{padding-top:46px}#skeleton .row{display:flex;margin-bottom:11px;align-items:center}#skeleton .row.fadein{animation:1s ease-in 0s 1 normal both running startup-shimmer-fade-in}#skeleton .chevron{width:12px;height:12px;display:block;margin-right:4px;fill:rgba(227,226,224,.5)}body.dark #skeleton .chevron{fill:#2f2f2f}.startup-shimmer{background:rgba(227,226,224,.5);overflow:hidden;position:relative}body.dark .startup-shimmer{background:#2f2f2f}.startup-shimmer::before{content:"";position:absolute;height:100%;width:100%;z-index:1;animation:1s linear infinite startup-shimmer-animation;background:linear-gradient(90deg,rgba(0,0,0,0) 0,rgba(0,0,0,.03) 50%,rgba(0,0,0,0) 100%)}body.dark .startup-shimmer::before{background:linear-gradient(90deg,transparent 0,rgba(86,86,86,.1) 50%,transparent 100%)}#skeleton .icon{width:20px;height:20px;border-radius:4px}#skeleton .text{height:10px;border-radius:10px}#skeleton .draggable{-webkit-app-region:drag;position:absolute;top:0;left:0;width:100%;height:36px;display:none}#skeleton.isElectron .draggable{display:block}</style><script>window.__notion_html_async=[];window.DEVICE_READY_P=new Promise(r=>(o=>{document.dispatchEvent=function(e){return"deviceready"===e?.type&&r(),o.apply(this,arguments)}})(document.dispatchEvent))</script><script src="/_assets/ClientFramework-3b9cdc83823b66fd.js" async=""></script><script src="/_assets/6187-5c30b4d4633a7dce.js" async=""></script><script src="/_assets/29924-2c27dd5338a71b62.js" async=""></script><script src="/_assets/70611-e9db31a5f4627baf.js" async=""></script><script src="/_assets/40915-be6be5c0b75c910f.js" async=""></script><script src="/_assets/68336-2fe5a3ceb4e720d1.js" async=""></script><script src="/_assets/48547-6be928f24e6fcfd5.js" async=""></script><script src="/_assets/app-c3d184b3b033ac4f.js" async=""></script><link href="/_assets/app-46fc90cb8b0df21e.css" rel="stylesheet"><link rel="stylesheet" type="text/css" href="/_assets/mainApp-5f55d314f6df5aa4.css"><link rel="stylesheet" type="text/css" href="/_assets/SidebarComponent-5f55d314f6df5aa4.css"><link rel="stylesheet" type="text/css" href="/_assets/BlockPropertyRouter-5f55d314f6df5aa4.css"><style>
+
+
+		
+		
+		.assistant-grouped-edit-chat-container .assistant-grouped-edit-insert {
+			background: initial !important;
+			border-bottom: initial !important;
+			color: var(--c-texPri) !important;
+		}
+
+		.assistant-grouped-edit-chat-container .assistant-grouped-edit-remove {
+			background: initial !important;
+			border-bottom: initial !important;
+			color: var(--c-texDis) !important;
+		}
+	
+	</style><link rel="stylesheet" type="text/css" href="/_assets/consoleHelpers-5f55d314f6df5aa4.css"><scr...

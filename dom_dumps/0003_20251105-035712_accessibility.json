@@ -1,0 +1,72 @@
+{
+  "role": "WebArea",
+  "name": "New page",
+  "children": [
+    {
+      "role": "link",
+      "name": "Skip to content"
+    },
+    {
+      "role": "button",
+      "name": "SaiVivek Venna's Notion Close sidebar New page More options",
+      "expanded": true,
+      "haspopup": "dialog",
+      "children": [
+        {
+          "role": "button",
+          "name": "Close sidebar"
+        },
+        {
+          "role": "button",
+          "name": "New page"
+        },
+        {
+          "role": "button",
+          "name": "More options",
+          "haspopup": "dialog"
+        }
+      ]
+    },
+    {
+      "role": "button",
+      "name": "Search"
+    },
+    {
+      "role": "link",
+      "name": "Home"
+    },
+    {
+      "role": "link",
+      "name": "Meetings"
+    },
+    {
+      "role": "link",
+      "name": "Notion AI"
+    },
+    {
+      "role": "button",
+      "name": "Inbox"
+    },
+    {
+      "role": "button",
+      "name": "Shared",
+      "expanded": true,
+      "children": [
+        {
+          "role": "button",
+          "name": ""
+        }
+      ]
+    },
+    {
+      "role": "tree",
+      "name": "Shared",
+      "orientation": "vertical"
+    },
+    {
+      "role": "button",
+      "name": "Start collaborating"
+    }
+  ],
+  "children_truncated": true
+}
