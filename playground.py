@@ -1,60 +1,79 @@
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeoutError
-import time
+"""Simple playground script that reuses the persistent Notion profile."""
 
-OUTPUT_HTML = "notion_home_dom.html"
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)  # show the browser
-    page = browser.new_page()
+from bots._profile_launch import launch_persistent, shutdown as shutdown_persistent
 
-    print("🌍 Navigating to Notion…")
-    page.goto("https://www.notion.so/", wait_until="load", timeout=30000)
+NOTION_URL = "https://www.notion.so/"
+PROFILE_DIR = "profiles/notion"
+DATABASE_LABELS = [
+    ("link[Database]", lambda page: page.get_by_role("link", name="Database")),
+    ("button[Database]", lambda page: page.get_by_role("button", name="Database")),
+    ("link[Databases]", lambda page: page.get_by_role("link", name="Databases")),
+    ("text=Database", lambda page: page.get_by_text("Database", exact=True)),
+    ("text contains 'New database'", lambda page: page.get_by_text("New database")),
+]
 
-    # Let things settle (fonts/animations/cookie banners)
+EMPTY_TEMPLATE_LABELS = [
+    ("button[Empty]", lambda page: page.get_by_role("button", name="Empty")),
+    ("link[Empty]", lambda page: page.get_by_role("link", name="Empty")),
+    ("text=Empty", lambda page: page.get_by_text("Empty", exact=True)),
+    ("text contains 'Empty page'", lambda page: page.get_by_text("Empty page")),
+]
+SCREENSHOT_PATH = "notion_database_click.png"
+
+
+def main() -> None:
+    playwright = None
+    context = None
+    page = None
     try:
-        page.wait_for_load_state("networkidle", timeout=10000)
-    except PWTimeoutError:
-        pass
-    time.sleep(1.5)
+        playwright, context, page = launch_persistent(NOTION_URL, PROFILE_DIR, headless=False)
 
-    # Optional: try to accept cookie banner if present (best-effort)
-    try:
-        # Common cookie buttons on Notion lander
-        selectors = [
-            "button:has-text('Accept')",
-            "button:has-text('I agree')",
-            "button:has-text('Got it')",
-            "[aria-label='Accept cookies']",
-        ]
-        for sel in selectors:
-            if page.locator(sel).first.is_visible():
-                page.click(sel, timeout=2000)
-                time.sleep(0.5)
-                break
-    except Exception:
-        pass
+        try:
+            page.wait_for_load_state("networkidle", timeout=10000)
+        except PWTimeoutError:
+            pass
 
-    # One more quick settle
-    try:
-        page.wait_for_load_state("networkidle", timeout=5000)
-    except PWTimeoutError:
-        pass
-    time.sleep(0.8)
+        def click_with_fallbacks(options, description: str) -> None:
+            for label, builder in options:
+                try:
+                    locator = builder(page)
+                    if locator.count() == 0:
+                        print(f"  • No matches for {label}; trying next…")
+                        continue
+                    target = locator.first
+                    target.wait_for(state="visible", timeout=10000)
+                    target.click(timeout=10000)
+                    print(f"✅ {description} via selector: {label}")
+                    return
+                except Exception as exc:
+                    print(f"  • Selector {label} failed: {exc}")
+            raise RuntimeError(f"Could not locate the {description.lower()} with known selectors.")
 
-    # Grab DOM
-    dom = page.content()
-    print("✅ Page title:", page.title())
-    print(f"🧾 DOM length: {len(dom):,} chars")
-    print("🔎 First 15000 chars:\n", dom[:15000])
+        print("🔘 Attempting to click the Database control…")
+        click_with_fallbacks(DATABASE_LABELS, "Clicked Database control")
 
-    # Save full DOM to file
-    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
-        f.write(dom)
-    print(f"💾 Full DOM saved to {OUTPUT_HTML}")
+        try:
+            page.wait_for_timeout(1000)
+        except Exception:
+            pass
 
-    # Screenshot after content settles
-    page.screenshot(path="notion_home.png")
-    print("📸 Screenshot saved: notion_home.png")
+        print("🆕 Attempting to click the Empty template…")
+        click_with_fallbacks(EMPTY_TEMPLATE_LABELS, "Clicked Empty template")
 
-    # Keep browser open for inspection if you want
-    # browser.close()
+        try:
+            page.wait_for_load_state("networkidle", timeout=10000)
+        except PWTimeoutError:
+            pass
+
+        page.screenshot(path=SCREENSHOT_PATH, full_page=True)
+        print(f"📸 Screenshot saved: {SCREENSHOT_PATH}")
+
+        input("✅ Done. Inspect the page, then press Enter to close the browser…")
+    finally:
+        shutdown_persistent(playwright, context)
+
+
+if __name__ == "__main__":
+    main()
