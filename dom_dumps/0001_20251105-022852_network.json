@@ -1,0 +1,908 @@
+[
+  {
+    "type": "response",
+    "timestamp": 1762327732.11295,
+    "url": "https://www.notion.so/_assets/93980-53ced1d983fe3f77.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.1130822,
+    "url": "https://www.notion.so/_assets/66331-d65eaecefe9a2ac0.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.113204,
+    "url": "https://www.notion.so/_assets/ModalOverlayCollectionView-3c1ced6a09aa7848.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.1134741,
+    "url": "https://www.notion.so/_assets/92601-bdb6d3f39d4fa819.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.113711,
+    "url": "https://www.notion.so/_assets/slashMenu-8537d20d198b27fd.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.113867,
+    "url": "https://www.notion.so/_assets/RecentsCachingListener-cf3feb396433a05e.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.114249,
+    "url": "https://www.notion.so/_assets/linkMenu-5908ab0c409627c1.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.114645,
+    "url": "https://www.notion.so/_assets/radioModalRenderer-059cc5fab85eb426.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.115772,
+    "url": "https://www.googletagmanager.com/static/service_worker/5a20/sw_iframe.html?origin=https%3A%2F%2Faif.notion.so",
+    "method": "GET",
+    "resource_type": "document"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.11609,
+    "url": "https://www.notion.so/api/v3/listAIConnectors",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.116296,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.1164029,
+    "url": "https://www.googletagmanager.com/gtag/js?id=AW-10930095205&cx=c&gtm=4e5b31",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.116544,
+    "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.116839,
+    "url": "https://cdn.metadata.io/site-insights.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.1170619,
+    "url": "https://www.notion.so/front-static/scripts/gtm/metadata-io-site-script.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.117213,
+    "url": "https://www.googletagmanager.com/gtag/js?id=G-9ZJ8CB186L&cx=c&gtm=4e5b31",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.117435,
+    "url": "https://www.googletagmanager.com/static/service_worker/5a20/sw_iframe.html?origin=https%3A%2F%2Faif.notion.so",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "document"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.131946,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.134144,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1346428,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1350772,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.135669,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1366148,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.138628,
+    "url": "https://identity.notion.so/authSync",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "document"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.138944,
+    "url": "https://www.notion.so/api/v3/detectPageLanguage",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.139195,
+    "url": "https://www.notion.so/api/v3/getTrustedDomainsForSpace",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.139383,
+    "url": "https://www.notion.so/api/v3/getWillBeSubjectToSanctions",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.139607,
+    "url": "https://www.notion.so/api/v3/getDesktopAppRegistration",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.139733,
+    "url": "https://www.notion.so/api/v3/getTranscriptionUsage",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.139936,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.140238,
+    "url": "https://www.notion.so/_assets/FeatureIntroPopup-9cca1917cf97ff27.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.140676,
+    "url": "https://www.notion.so/api/v3/getAIConnectorAuthorizationUrl",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.140915,
+    "url": "https://www.notion.so/api/v3/getAIConnectorAuthorizationUrl",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.141025,
+    "url": "https://www.notion.so/api/v3/getEmailDomainSettings",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.141112,
+    "url": "https://www.notion.so/api/v3/getIsCalendarUser",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.141212,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.16691,
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10930095205/?random=1762327732161&cv=11&fst=1762327732161&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be5b31z8840392510za200zb840392510zd840392510xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.167424,
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10930095205/?random=1762327732165&cv=11&fst=1762327732165&bg=ffffff&guid=ON&async=1&gtm=45be5b31z8840392510za200zb840392510zd840392510xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&_tu=CA&rfmt=3&fmt=4",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1684742,
+    "url": "https://px.ads.linkedin.com/attribution_trigger?pid=2368700&time=1762327732166&url=https%3A%2F%2Faif.notion.so%2Faif-production.html",
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1691809,
+    "url": "https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=2368700&time=1762327732166&li_adsId=146d8904-e413-4622-afb7-462a33fe1cc8&url=https%3A%2F%2Faif.notion.so%2Faif-production.html",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1693099,
+    "url": "https://api.ipify.org/?format=json",
+    "method": "GET",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.169395,
+    "url": "https://cdn.metadata.io/pixel/config/1127.json",
+    "method": "GET",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.1766772,
+    "url": "https://analytics.google.com/g/collect?v=2&tid=G-9ZJ8CB186L&gtm=45je5b31v876131458z8840392510za200zb840392510zd840392510&_p=1762327731802&_gaz=1&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=993014994.1762278491&ul=en-us&sr=1280x720&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&are=1&frm=2&pscdl=noapi&_eu=AAAAAAQ&_s=1&tag_exp=101509157~103116026~103200004~103233427~104527906~104528501~104684208~104684211~104948813~105322302~115480710~115583767~115616985~115938466~115938469~116217636~116217638&sid=1762325148&sct=2&seg=1&dl=https%3A%2F%2Faif.notion.so%2Faif-production.html&dt=&en=page_view&up.is_logged_in=false&tfd=708",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.176833,
+    "url": "https://www.google.ca/ads/ga-audiences?v=1&t=sr&slf_rd=1&_r=4&tid=G-9ZJ8CB186L&cid=993014994.1762278491&gtm=45je5b31v876131458z8840392510za200zb840392510zd840392510&aip=1&dma=0&gcd=13l3l3l3l1l1&npa=0&frm=2&tag_exp=101509157~103116026~103200004~103233427~104527906~104528501~104684208~104684211~104948813~105322302~115480710~115583767~115616985~115938466~115938469~116217636~116217638&z=1259101713",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.227169,
+    "url": "https://cdn.sprig.com/shim.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2277398,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762327732223&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=102&gz=1",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.232218,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762327732223&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=102&gz=1",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2324328,
+    "url": "https://www.notion.so/_assets/transport-support-79187dfcba564918.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.232704,
+    "url": "https://px.ads.linkedin.com/collect?v=2&fmt=js&pid=2368700&time=1762327732166&li_adsId=146d8904-e413-4622-afb7-462a33fe1cc8&url=https%3A%2F%2Faif.notion.so%2Faif-production.html",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.23294,
+    "url": "https://static.ads-twitter.com/uwt.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2331321,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwnyC&b64=1",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2332249,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwo04&b64=1&sid=Bs3B7WaoMM490wrTAkuH",
+    "method": "POST",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.233301,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwo05.0&b64=1&sid=Bs3B7WaoMM490wrTAkuH",
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.233398,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.233472,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.233545,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.233621,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2345579,
+    "url": "https://identity.notion.so/identity-main.e462fc96b62c4c4fc5a0.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.234966,
+    "url": "https://www.notion.so/api/v3/getSubscriptionEntitlements",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.23618,
+    "url": "https://www.notion.so/api/v3/getAIUsageEligibility",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.24145,
+    "url": "https://www.notion.so/_assets/FeatureIntroPopup-9cca1917cf97ff27.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.242035,
+    "url": "https://www.notion.so/api/v3/getCustomEmojisForSpace",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2424,
+    "url": "https://www.google.ca/ads/ga-audiences?v=1&t=sr&slf_rd=1&_r=4&tid=G-9ZJ8CB186L&cid=993014994.1762278491&gtm=45je5b31v876131458z8840392510za200zb840392510zd840392510&aip=1&dma=0&gcd=13l3l3l3l1l1&npa=0&frm=2&tag_exp=101509157~103116026~103200004~103233427~104527906~104528501~104684208~104684211~104948813~105322302~115480710~115583767~115616985~115938466~115938469~116217636~116217638&z=1259101713",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2426748,
+    "url": "https://www.notion.so/api/v3/getUserTasks",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.244372,
+    "url": "https://cdn.metadata.io/pixel/config/1127.json",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2503748,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.250867,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.251074,
+    "url": "https://api.ipify.org/?format=json",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.251348,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2516139,
+    "url": "https://px.ads.linkedin.com/attribution_trigger?pid=2368700&time=1762327732166&url=https%3A%2F%2Faif.notion.so%2Faif-production.html",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2518551,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.259012,
+    "url": "https://www.notion.so/_assets/transport-support-79187dfcba564918.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.261013,
+    "url": "https://analytics.google.com/g/collect?v=2&tid=G-9ZJ8CB186L&gtm=45je5b31v876131458z8840392510za200zb840392510zd840392510&_p=1762327731802&_gaz=1&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=993014994.1762278491&ul=en-us&sr=1280x720&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&are=1&frm=2&pscdl=noapi&_eu=AAAAAAQ&_s=1&tag_exp=101509157~103116026~103200004~103233427~104527906~104528501~104684208~104684211~104948813~105322302~115480710~115583767~115616985~115938466~115938469~116217636~116217638&sid=1762325148&sct=2&seg=1&dl=https%3A%2F%2Faif.notion.so%2Faif-production.html&dt=&en=page_view&up.is_logged_in=false&tfd=708",
+    "status": 204,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2666318,
+    "url": "https://t.co/1/i/adsct?bci=4&dv=America%2FToronto%26en-US%2Cen%26Google%20Inc.%26MacIntel%26127%261280%26720%268%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=1aeae8e7-7b49-42da-a266-8513d88d9339&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=44e602d2-835d-4514-8fd1-44c1dec9a7ae&tw_document_href=https%3A%2F%2Faif.notion.so%2Faif-production.html&tw_iframe_status=1&txn_id=ofilm&type=javascript&version=2.3.34",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2669299,
+    "url": "https://analytics.twitter.com/1/i/adsct?bci=4&dv=America%2FToronto%26en-US%2Cen%26Google%20Inc.%26MacIntel%26127%261280%26720%268%2624%261280%26720%260%26na&eci=3&event=%7B%7D&event_id=1aeae8e7-7b49-42da-a266-8513d88d9339&integration=gtm&p_id=Twitter&p_user_id=0&pl_id=44e602d2-835d-4514-8fd1-44c1dec9a7ae&tw_document_href=https%3A%2F%2Faif.notion.so%2Faif-production.html&tw_iframe_status=1&txn_id=ofilm&type=javascript&version=2.3.34",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.267082,
+    "url": "https://cdn.sprig.com/shim.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.267232,
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10930095205/?random=1762327732161&cv=11&fst=1762327732161&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be5b31z8840392510za200zb840392510zd840392510xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2673721,
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/10930095205/?random=1762327732165&cv=11&fst=1762327732165&bg=ffffff&guid=ON&async=1&gtm=45be5b31z8840392510za200zb840392510zd840392510xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&_tu=CA&rfmt=3&fmt=4",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.267478,
+    "url": "https://www.google.com/ccm/collect?frm=2&tid=AW-954804604&en=page_view&dl=https%3A%2F%2Faif.notion.so%2Faif-production.html&scrsrc=www.googletagmanager.com&rnd=382185892.1762327732&auid=4129833.1762278490&navt=n&npa=0&gtm=45be5b31v874480120za200zd874480120xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104684208~104684211~104948813~115480710~115583767~115616985~115938466~115938469~116217636~116217638&tft=1762327732001&tfd=535&apve=1&apvf=sb",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "ping"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.267575,
+    "url": "https://www.notion.so/api/v3/getDesktopAppRegistration",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.270292,
+    "url": "https://www.notion.so/api/v3/getEmailDomainSettings",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.270514,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.271801,
+    "url": "https://identity.notion.so/identity-main.e462fc96b62c4c4fc5a0.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.287251,
+    "url": "https://www.notion.so/api/v3/getAIConnectorAuthorizationUrl",
+    "status": 400,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.292948,
+    "url": "https://www.notion.so/api/v3/getIsCalendarUser",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.294134,
+    "url": "https://www.google.com/pagead/1p-user-list/10930095205/?random=1762327732161&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be5b31z8840392510za200zb840392510zd840392510xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0Y8lOWiLY8b1Bumyu-7xCP7zu8424BCoSa6mQbISw5DKSWjVHt50J99BtT6YMUiFmNIxlxIBIaj5CSyKWzozqentm2Af2jeousN69ivwi3t24EYo9VRHw3ppXKjTN_BAiwXif98HYLtRqRP4HkicF8yDIzrv6YTuetJfoVYnc1ie0CBA0oDUZUY&random=921824832&rmt_tld=0&ipr=y",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.2942731,
+    "url": "https://www.google.ca/pagead/1p-user-list/10930095205/?random=1762327732161&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be5b31z8840392510za200zb840392510zd840392510xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0Y8lOWiLY8b1Bumyu-7xCP7zu8424BCoSa6mQbISw5DKSWjVHt50J99BtT6YMUiFmNIxlxIBIaj5CSyKWzozqentm2Af2jeousN69ivwi3t24EYo9VRHw3ppXKjTN_BAiwXif98HYLtRqRP4HkicF8yDIzrv6YTuetJfoVYnc1ie0CBA0oDUZUY&random=921824832&rmt_tld=1&ipr=y",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.294359,
+    "url": "https://www.google.com/pagead/1p-user-list/10930095205/?random=1762327732165&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&gtm=45be5b31z8840392510za200zb840392510zd840392510xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&_tu=CA&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0exIDBuDuV0VPjvcbdUUvShDLZifMGsYW-LkqUprumg4JszwmAiaO5GU9klm8k4QSeYQkpMoKPyvgRORW0UWRsWmgcj3-sv78lucMm1RZplRGkdI-SUL3KRFCrCLtGwAt_J82c6l1kw6_k09ULxGndHKPZypd4yQky9ZOax3LpIFubIX8P_E_-I&random=2890766278&rmt_tld=0&ipr=y",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.294431,
+    "url": "https://www.google.ca/pagead/1p-user-list/10930095205/?random=1762327732165&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&gtm=45be5b31z8840392510za200zb840392510zd840392510xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&_tu=CA&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0exIDBuDuV0VPjvcbdUUvShDLZifMGsYW-LkqUprumg4JszwmAiaO5GU9klm8k4QSeYQkpMoKPyvgRORW0UWRsWmgcj3-sv78lucMm1RZplRGkdI-SUL3KRFCrCLtGwAt_J82c6l1kw6_k09ULxGndHKPZypd4yQky9ZOax3LpIFubIX8P_E_-I&random=2890766278&rmt_tld=1&ipr=y",
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.295991,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.2961202,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762327732223&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=102&gz=1",
+    "status": 202,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.300031,
+    "url": "https://exp.notion.so/v1/rgstr?k=client-Tgza5wNFa8dVt9BdeUfG6Vkm29bHxX10MhoztTMzLBB&st=javascript-client&sv=3.17.1&t=1762327732223&sid=aeeba614-1d2b-407d-a51f-b54807fbfd6a&ec=102&gz=1",
+    "status": 202,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.300388,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.300638,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.302186,
+    "url": "https://api-gw.metadata.io/traffic",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.3047419,
+    "url": "https://http-inputs-notion.splunkcloud.com/services/collector/raw",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.308578,
+    "url": "https://www.notion.so/api/v3/getIsMailUser",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.309597,
+    "url": "https://www.notion.so/api/v3/getCustomerOffer",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.324812,
+    "url": "https://www.google.ca/pagead/1p-user-list/10930095205/?random=1762327732161&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be5b31z8840392510za200zb840392510zd840392510xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0Y8lOWiLY8b1Bumyu-7xCP7zu8424BCoSa6mQbISw5DKSWjVHt50J99BtT6YMUiFmNIxlxIBIaj5CSyKWzozqentm2Af2jeousN69ivwi3t24EYo9VRHw3ppXKjTN_BAiwXif98HYLtRqRP4HkicF8yDIzrv6YTuetJfoVYnc1ie0CBA0oDUZUY&random=921824832&rmt_tld=1&ipr=y",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.3269818,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwo05.0&b64=1&sid=Bs3B7WaoMM490wrTAkuH",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.32728,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwo1a&b64=1&sid=Bs3B7WaoMM490wrTAkuH",
+    "method": "GET",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.3277419,
+    "url": "https://www.google.ca/pagead/1p-user-list/10930095205/?random=1762327732165&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&gtm=45be5b31z8840392510za200zb840392510zd840392510xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&_tu=CA&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0exIDBuDuV0VPjvcbdUUvShDLZifMGsYW-LkqUprumg4JszwmAiaO5GU9klm8k4QSeYQkpMoKPyvgRORW0UWRsWmgcj3-sv78lucMm1RZplRGkdI-SUL3KRFCrCLtGwAt_J82c6l1kw6_k09ULxGndHKPZypd4yQky9ZOax3LpIFubIX8P_E_-I&random=2890766278&rmt_tld=1&ipr=y",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.328204,
+    "url": "https://www.google.com/pagead/1p-user-list/10930095205/?random=1762327732165&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&gtm=45be5b31z8840392510za200zb840392510zd840392510xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&_tu=CA&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0exIDBuDuV0VPjvcbdUUvShDLZifMGsYW-LkqUprumg4JszwmAiaO5GU9klm8k4QSeYQkpMoKPyvgRORW0UWRsWmgcj3-sv78lucMm1RZplRGkdI-SUL3KRFCrCLtGwAt_J82c6l1kw6_k09ULxGndHKPZypd4yQky9ZOax3LpIFubIX8P_E_-I&random=2890766278&rmt_tld=0&ipr=y",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.328608,
+    "url": "https://assets.customer.io/assets/in-app.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.3288121,
+    "url": "https://www.google.com/pagead/1p-user-list/10930095205/?random=1762327732161&cv=11&fst=1762326000000&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be5b31z8840392510za200zb840392510zd840392510xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=101509157~103116026~103200004~103233427~104527906~104528500~104573694~104684208~104684211~104948813~115480709~115583767~115938466~115938469~116217636~116217638&u_w=1280&u_h=720&url=https%3A%2F%2Faif.notion.so%2Faif-production.html&top=https%3A%2F%2Fwww.notion.so&frm=2&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=4129833.1762278490&uaa=arm&uab=64&uafvl=Not%253DA%253FBrand%3B24.0.0.0%7CChromium%3B140.0.7339.16&uamb=0&uam=&uap=macOS&uapv=14.5.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=3&is_vtc=1&cid=CAQSjQEAwksa0Y8lOWiLY8b1Bumyu-7xCP7zu8424BCoSa6mQbISw5DKSWjVHt50J99BtT6YMUiFmNIxlxIBIaj5CSyKWzozqentm2Af2jeousN69ivwi3t24EYo9VRHw3ppXKjTN_BAiwXif98HYLtRqRP4HkicF8yDIzrv6YTuetJfoVYnc1ie0CBA0oDUZUY&random=921824832&rmt_tld=0&ipr=y",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "image"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.3293388,
+    "url": "https://http-inputs-notion.splunkcloud.com/services/collector/raw",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.329504,
+    "url": "https://api.sprig.com/sdk/1/environments/2HKBN1wgCwHr/config",
+    "method": "GET",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.329668,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwo04&b64=1&sid=Bs3B7WaoMM490wrTAkuH",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.330227,
+    "url": "https://msgstore-002.www.notion.so/primus-v8/?sessionId=63061b49-2614-45fe-95ab-e3c436d2d334&_primuscb=PfIwnyB&EIO=4&transport=polling&t=PfIwo1e&b64=1&sid=Bs3B7WaoMM490wrTAkuH",
+    "method": "POST",
+    "resource_type": "xhr"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.3304,
+    "url": "https://assets.customer.io/assets/in-app.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.3346932,
+    "url": "https://code.gist.build/web/latest/gist.min.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.3362198,
+    "url": "https://www.notion.so/api/v3/getIsMailUser",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.340808,
+    "url": "https://www.notion.so/api/v3/scheduleSetupPeopleCollection",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.358167,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.36286,
+    "url": "https://code.gist.build/web/latest/gist.min.js",
+    "status": 302,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.363055,
+    "url": "https://code.gist.build/web/3.16.10/gist.min.js",
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.363171,
+    "url": "https://code.gist.build/web/3.16.10/gist.min.js",
+    "status": 200,
+    "method": "GET",
+    "resource_type": "script"
+  },
+  {
+    "type": "request",
+    "timestamp": 1762327732.3632908,
+    "url": "https://consumer.cloud.gist.build/api/v3/users?sessionId=c5638511-1b98-451e-9102-faa7b36d463c",
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.3633862,
+    "url": "https://www.notion.so/api/v3/getSubscriptionEntitlements",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  },
+  {
+    "type": "response",
+    "timestamp": 1762327732.363482,
+    "url": "https://www.notion.so/api/v3/syncRecordValuesSpaceInitial",
+    "status": 200,
+    "method": "POST",
+    "resource_type": "fetch"
+  }
+]
