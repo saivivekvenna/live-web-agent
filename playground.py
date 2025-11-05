@@ -2,9 +2,10 @@
 
 import json
 import os
+import re
 import sys
 import textwrap
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Callable, Dict, List, Optional
 
 from openai import OpenAI
@@ -21,19 +22,9 @@ OVERLAY_LOCATORS = [
     ("role[listbox]", lambda page: page.locator("[role='listbox']")),
 ]
 
-NOTION_CONTROL_HINTS = [
-    "Add new",
-    "Create new",
-    "New page",
-    "Database",
-    "New database",
-    "Empty database",
-    "Empty",
-    "Empty page",
-]
 SCREENSHOT_PATH = "notion_database_click.png"
 client = OpenAI()
-DEFAULT_GOAL = "create a database in notion"
+DEFAULT_GOAL = "create a form in notion"
 MAX_ACTIONS = 12
 
 
@@ -47,7 +38,6 @@ class ActionRecord:
 @dataclass
 class IntegrationConfig:
     provider: str
-    action: str
     base_url: str
     profile_dir: str
     label_hints: List[str] = field(default_factory=list)
@@ -138,6 +128,24 @@ def _extract_json_object(text: str) -> dict:
         except Exception:
             return {}
     return {}
+
+
+def _extract_json_array(text: str) -> List[str]:
+    """
+    Pull the first JSON array from a model response. Returns [] on failure.
+    """
+    text = text.strip()
+    start = text.find("[")
+    end = text.rfind("]")
+    if start != -1 and end != -1 and end > start:
+        snippet = text[start : end + 1]
+        try:
+            data = json.loads(snippet)
+            if isinstance(data, list):
+                return data
+        except Exception:
+            return []
+    return []
 
 
 def _make_label_locators(label: str, hints: Optional[List[str]] = None) -> List[tuple]:
@@ -236,7 +244,7 @@ def _format_history(history: List[ActionRecord]) -> str:
     return "\n".join(lines)
 
 
-def _plan_next_action(page, goal: str, config: IntegrationConfig, history: List[ActionRecord]) -> dict:
+def _plan_next_action(page, goal: str, action: str, config: IntegrationConfig, history: List[ActionRecord]) -> dict:
     dom_snapshot = _capture_prioritized_dom(page)
     history_text = _format_history(history)
     hints_text = ", ".join(config.label_hints) if config.label_hints else "None"
@@ -248,6 +256,7 @@ def _plan_next_action(page, goal: str, config: IntegrationConfig, history: List[
         You are operating a browser automation agent.
 
         Goal: {goal}
+        Action focus: {action}
         Provider: {config.provider}
         Known helpful controls: {hints_text}
         Overlay/dialog visibility: {overlay_state}
@@ -294,6 +303,56 @@ def _plan_next_action(page, goal: str, config: IntegrationConfig, history: List[
         raise RuntimeError(f"Planning LLM failed: {exc}") from exc
 
 
+def _discover_control_hints(page, goal: str, provider: str, action: str, limit: int = 10) -> List[str]:
+    dom_snapshot = _capture_prioritized_dom(page)
+    prompt = textwrap.dedent(
+        f"""
+        You analyze live DOM fragments to suggest UI labels that help achieve the goal.
+
+        Goal: {goal}
+        Action focus: {action}
+        Provider: {provider}
+
+        Return a JSON array (max {limit}) of short, distinct control labels or keywords to look for.
+        Prefer concrete button, menu, or link text. Avoid duplicates and overly long strings.
+
+        DOM SNIPPET (truncated):
+        {dom_snapshot}
+        """
+    ).strip()
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Extract relevant UI control labels. Respond with JSON array only."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+        )
+        raw = response.choices[0].message.content or "[]"
+        candidates = _extract_json_array(raw)
+        hints: List[str] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            if not isinstance(candidate, str):
+                continue
+            label = candidate.strip()
+            if not label or len(label) > 40:
+                continue
+            key = label.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            hints.append(label)
+            if len(hints) >= limit:
+                break
+        return hints
+    except Exception as exc:
+        print(f"  • Control hint discovery failed: {exc}")
+        return []
+
+
 def _resolve_goal() -> str:
     """
     Resolve the user's desired goal from CLI args, environment, or stdin.
@@ -319,29 +378,14 @@ def _resolve_goal() -> str:
     return DEFAULT_GOAL
 
 
-INTENT_KEYWORD_MAP = [
-    {
-        "provider": "notion",
-        "action": "create_database",
-        "provider_terms": ("notion",),
-        "action_terms": ("create database", "create a database", "database", "databases", "db"),
-    },
-    {
-        "provider": "linear",
-        "action": "create_project",
-        "provider_terms": ("linear",),
-        "action_terms": ("project", "issue", "ticket"),
-    },
-]
-
-
-def _classify_intent_llm(goal: str) -> Optional[tuple[str, str]]:
+def _classify_intent_llm(goal: str, provider_hint: Optional[str] = None) -> Optional[tuple[str, str]]:
     """
     Fallback classifier that asks the LLM to provide provider/action JSON.
     """
     prompt = textwrap.dedent(
         f"""
         Analyze the user's goal: "{goal}".
+        {f"Known provider hint: {provider_hint}" if provider_hint else ""}
 
         Respond with a JSON object using the keys "provider" and "action".
         Keep providers in lowercase (e.g., "notion", "linear").
@@ -363,38 +407,54 @@ def _classify_intent_llm(goal: str) -> Optional[tuple[str, str]]:
         data = _extract_json_object(raw)
         provider = (data.get("provider") or "").strip().lower()
         action = (data.get("action") or "").strip().lower()
-        if provider and action:
-            return provider, action
+        if provider or action:
+            return provider or None, action or None
     except Exception as exc:
         print(f"  • Intent classification via LLM failed: {exc}")
     return None
 
 
+def _fallback_provider(goal: str) -> Optional[str]:
+    normalized = goal.lower()
+    if "notion" in normalized:
+        return "notion"
+    if "linear" in normalized:
+        return "linear"
+    return None
+
+
+def _slugify_goal(goal: str, max_tokens: int = 4) -> str:
+    tokens = [tok for tok in re.split(r"\W+", goal.lower()) if tok]
+    if not tokens:
+        return "generic_task"
+    return "_".join(tokens[:max_tokens])
+
+
 def parse_intent(goal: str) -> tuple[str, str]:
     """
-    Map a free-form goal description to (provider, action).
+    Map a free-form goal description to (provider, action) using the LLM with lightweight fallbacks.
     """
-    normalized = goal.lower()
-    for entry in INTENT_KEYWORD_MAP:
-        if any(term in normalized for term in entry["provider_terms"]) and any(
-            term in normalized for term in entry["action_terms"]
-        ):
-            return entry["provider"], entry["action"]
-
-    llm_guess = _classify_intent_llm(goal)
+    provider_hint = _fallback_provider(goal)
+    llm_guess = _classify_intent_llm(goal, provider_hint)
+    provider: Optional[str] = None
+    action: Optional[str] = None
     if llm_guess:
-        return llm_guess
+        provider, action = llm_guess
 
-    raise ValueError(f"Unable to determine provider/action for goal: {goal!r}")
+    provider = provider or provider_hint
+    if not provider:
+        raise ValueError(f"Unable to determine provider from goal: {goal!r}")
+
+    action = action or _slugify_goal(goal)
+    return provider, action
 
 
-INTEGRATIONS: Dict[tuple[str, str], IntegrationConfig] = {
-    ("notion", "create_database"): IntegrationConfig(
+INTEGRATIONS: Dict[str, IntegrationConfig] = {
+    "notion": IntegrationConfig(
         provider="notion",
-        action="create_database",
         base_url=NOTION_URL,
         profile_dir=PROFILE_DIR,
-        label_hints=NOTION_CONTROL_HINTS,
+        extra_prompt="Notion often opens creation menus in side panels or dialogs. Pay attention to menu items related to databases, forms, or new content.",
     ),
 }
 
@@ -410,9 +470,9 @@ def main() -> None:
         return
 
     print(f"🤖 Resolved intent → provider='{provider}', action='{action}'")
-    config = INTEGRATIONS.get((provider, action))
+    config = INTEGRATIONS.get(provider)
     if not config:
-        print(f"❌ No integration configured for provider '{provider}' and action '{action}'.")
+        print(f"❌ No integration configured for provider '{provider}'.")
         return
 
     headless = config.launch_kwargs.get("headless", False)
@@ -428,10 +488,20 @@ def main() -> None:
         except PWTimeoutError:
             pass
 
+        runtime_config = replace(config)
+        dynamic_hints = _discover_control_hints(page, goal, provider, action)
+        if dynamic_hints:
+            runtime_config.label_hints = dynamic_hints
+            print(f"🧠 Discovered control hints: {dynamic_hints}")
+        else:
+            runtime_config.label_hints = list(config.label_hints)
+            if runtime_config.label_hints:
+                print(f"🧠 Using fallback control hints: {runtime_config.label_hints}")
+
         history: List[ActionRecord] = []
         for step_idx in range(1, MAX_ACTIONS + 1):
             try:
-                plan = _plan_next_action(page, goal, config, history)
+                plan = _plan_next_action(page, goal, action, runtime_config, history)
             except RuntimeError as exc:
                 print(f"❌ Planner failure: {exc}")
                 break
@@ -477,6 +547,8 @@ def main() -> None:
                     outcome_icon = "✅" if success else "⚠️"
                     print(f"    {outcome_icon} Tried '{label}' → {message}")
                     if success:
+                        if label not in runtime_config.label_hints:
+                            runtime_config.label_hints.append(label)
                         executed = True
                         try:
                             page.wait_for_timeout(800)
