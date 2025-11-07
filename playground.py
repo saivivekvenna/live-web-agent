@@ -35,7 +35,7 @@ OVERLAY_LOCATORS = [
 
 SCREENSHOT_PATH = "notion_database_click.png"
 client = OpenAI()
-DEFAULT_GOAL = "change the settings to make the langauge french in notion"
+DEFAULT_GOAL = "find a job for SWE intern"
 MAX_ACTIONS = 12
 
 
@@ -407,6 +407,59 @@ def _make_label_locators(label: str, hints: Optional[List[str]] = None) -> List[
 
 
 
+def _make_input_locators(label: str, hints: Optional[List[str]] = None) -> List[tuple]:
+   """Return locator builders that target text entry controls matching the label."""
+   label = label.strip()
+   if not label:
+       return []
+
+   hints_set = {hint.lower() for hint in (hints or [])}
+   prefers_exact = "fuzzy" not in hints_set and len(label.split()) <= 4
+
+   def textbox(page, label=label, exact=prefers_exact):
+       return page.get_by_role("textbox", name=label, exact=exact)
+
+   def searchbox(page, label=label, exact=prefers_exact):
+       return page.get_by_role("searchbox", name=label, exact=exact)
+
+   def combobox(page, label=label, exact=prefers_exact):
+       return page.get_by_role("combobox", name=label, exact=exact)
+
+   def labeled(page, label=label, exact=prefers_exact):
+       return page.get_by_label(label, exact=exact)
+
+   def placeholder(page, label=label, exact=prefers_exact):
+       return page.get_by_placeholder(label, exact=exact)
+
+   def aria_label_contains(page, label=label):
+       escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+       return page.locator(f"[aria-label*=\"{escaped}\"]")
+
+   def data_testid_contains(page, label=label):
+       escaped = label.replace("\\", "\\\\").replace('"', '\\"')
+       return page.locator(f"[data-testid*=\"{escaped}\"]")
+
+   options: List[tuple] = []
+   seen: set[str] = set()
+
+   def add(desc: str, builder: Callable) -> None:
+       if desc in seen:
+           return
+       seen.add(desc)
+       options.append((desc, builder))
+
+   add(f"role=textbox[{label}]", textbox)
+   add(f"role=searchbox[{label}]", searchbox)
+   add(f"role=combobox[{label}]", combobox)
+   add(f"label[{label}]", labeled)
+   add(f"placeholder[{label}]", placeholder)
+   add(f"aria-label contains '{label}'", aria_label_contains)
+   add(f"data-testid contains '{label}'", data_testid_contains)
+
+   return options
+
+
+
 def _attempt_dropdown_click(page, label: str, exact: bool = True) -> tuple[bool, str]:
    """
    Try to select a visible option inside an open dropdown/listbox.
@@ -483,6 +536,67 @@ def _attempt_click(
 
 
 
+def _attempt_type(
+   page,
+   label: str,
+   text: str,
+   hints: Optional[List[str]] = None,
+   clear_first: bool = True,
+   press_enter: bool = False,
+) -> tuple[bool, str]:
+   """
+   Focus a textbox matching the label and enter the provided text.
+   """
+   label = (label or "").strip()
+   if not label:
+       return False, "Type skipped: empty label."
+   text_value = str(text)
+   options = _make_input_locators(label, hints)
+   if not options:
+       return False, "No input locator strategies generated."
+
+   last_error = "No matching input elements located."
+   for desc, builder in options:
+       try:
+           locator = builder(page)
+           if locator.count() == 0:
+               last_error = f"{desc} matched 0 elements"
+               continue
+           target = locator.first
+           target.wait_for(state="visible", timeout=10000)
+           try:
+               target.click(timeout=5000)
+           except Exception:
+               pass
+
+           typed_via = "fill"
+           try:
+               target.fill(text_value, timeout=5000)
+           except Exception:
+               typed_via = "type"
+               if clear_first:
+                   try:
+                       target.press("Meta+A", timeout=1000)
+                   except Exception:
+                       try:
+                           target.press("Control+A", timeout=1000)
+                       except Exception:
+                           pass
+                   try:
+                       target.press("Backspace", timeout=1000)
+                   except Exception:
+                       pass
+               target.type(text_value, delay=40, timeout=10000)
+
+           if press_enter:
+               target.press("Enter", timeout=2000)
+           return True, f"Typed '{text_value}' via {desc} ({typed_via})"
+       except Exception as exc:
+           last_error = str(exc)
+   return False, f"Typing failed. Last error: {last_error}"
+
+
+
 def _format_history(history: List[ActionRecord]) -> str:
    if not history:
        return "No actions taken yet."
@@ -545,14 +659,16 @@ def _plan_next_action(
 
        Examine the DOM snippet and decide the single next best action to advance toward the goal.
        If a dropdown/listbox is open, prioritize selecting the appropriate option before navigating elsewhere.
+       When the user intent requires entering text (e.g., search queries, form values), prefer focusing the relevant textbox and typing the value before clicking submit/search controls.
        Respond with a JSON object containing:
          - "finish": boolean indicating whether the goal is already satisfied.
          - "reason": short string explaining your decision.
          - "targets": array (max 3) of action plans. Each object must include:
-               • "action": currently only "click" is supported.
-               • "label_variants": array of 1-3 plausible UI labels to try, ordered by priority.
-               • "locator_hints": optional array of hint strings (e.g., "dialog", "menu", "exact") to guide selectors.
-               • "notes": optional string giving context for the click.
+               • "action": choose between "click" or "type".
+               • "label_variants": array of 1-3 plausible UI labels/placeholder strings to try, ordered by priority.
+               • "locator_hints": optional array of hint strings (e.g., "dialog", "menu", "exact", "textbox") to guide selectors.
+               • "notes": optional string giving context for the interaction.
+               • when "action" == "type", also include "text" (what to enter) and optional booleans "press_enter" / "clear_first".
 
 
        If you believe the task is complete, set "finish": true and provide an empty "targets" array.
@@ -1164,8 +1280,10 @@ def main() -> None:
 
            executed = False
            for target in targets:
-               if target.get("action") != "click":
-                   print(f"  • Unsupported action '{target.get('action')}', skipping.")
+               action_kind_raw = target.get("action") or "click"
+               action_kind = action_kind_raw.strip().lower()
+               if action_kind not in {"click", "type"}:
+                   print(f"  • Unsupported action '{action_kind_raw}', skipping.")
                    continue
 
 
@@ -1188,11 +1306,34 @@ def main() -> None:
                if notes:
                    print(f"    ↳ Planner note: {notes}")
 
+               type_text_value: Optional[str] = None
+               type_press_enter = False
+               type_clear_first = True
+               if action_kind == "type":
+                   raw_text_value = target.get("text", target.get("value"))
+                   if raw_text_value is None:
+                       print("  • Type target missing 'text'; skipping.")
+                       continue
+                   type_text_value = str(raw_text_value)
+                   if isinstance(target.get("press_enter"), bool):
+                       type_press_enter = bool(target["press_enter"])
+                   if isinstance(target.get("clear_first"), bool):
+                       type_clear_first = bool(target["clear_first"])
 
                for label in label_variants:
-                   success, message = _attempt_click(
-                       page, label, locator_hints, page_state=page_state
-                   )
+                   if action_kind == "click":
+                       success, message = _attempt_click(
+                           page, label, locator_hints, page_state=page_state
+                       )
+                   else:
+                       success, message = _attempt_type(
+                           page,
+                           label,
+                           type_text_value or "",
+                           locator_hints,
+                           clear_first=type_clear_first,
+                           press_enter=type_press_enter,
+                       )
                    try:
                        updated_state = _summarize_page_state(
                            page, dom_limit=12000, excerpt_limit=1200
@@ -1209,9 +1350,10 @@ def main() -> None:
                    if not success:
                        state_snapshot = updated_state or {}
 
+                   history_label = f"{action_kind}:{label}" if action_kind != "click" else label
                    history.append(
                        ActionRecord(
-                           label=label,
+                           label=history_label,
                            success=success,
                            message=message,
                            state=state_snapshot,

@@ -79,6 +79,50 @@
       ]
     }
   },
+  "linkedin": {
+    "action_snapshot": "search_jobs",
+    "config": {
+      "base_url": "https://www.linkedin.com/jobs",
+      "extra_prompt": "Ensure to log in using your email and password or single sign-on options to access job listings.",
+      "label_hints": [
+        "Sign In",
+        "Join now",
+        "Jobs",
+        "Search",
+        "Profile",
+        "Connections",
+        "Messages",
+        "Notifications"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "linkedin_swe_intern"
+    },
+    "generated_at": "2025-11-07T08:40:15.441270+00:00",
+    "goal_snapshot": "find a job for SWE intern",
+    "search": {
+      "alternate_urls": [
+        "https://www.linkedin.com/jobs",
+        "https://www.linkedin.com/in",
+        "https://www.linkedin.com/help/linkedin"
+      ],
+      "login_hint": "Users authenticate using their email and password or via single sign-on options.",
+      "notes": "The layout is dynamic and may change based on user interactions; job postings are prominently displayed on the dashboard.",
+      "primary_url": "https://www.linkedin.com",
+      "profile_hint": "linkedin_swe_intern",
+      "ui_keywords": [
+        "Sign In",
+        "Join now",
+        "Jobs",
+        "Search",
+        "Profile",
+        "Connections",
+        "Messages",
+        "Notifications"
+      ]
+    }
+  },
   "notion": {
     "action_snapshot": "create_database",
     "config": {
@@ -158,6 +202,47 @@
         "Getting Started",
         "IDE",
         "Tutorials"
+      ]
+    }
+  },
+  "youtube": {
+    "action_snapshot": "search_video",
+    "config": {
+      "base_url": "https://www.youtube.com/",
+      "extra_prompt": "Use the search bar at the top of the page to find videos about LMMS.",
+      "label_hints": [
+        "Search",
+        "Home",
+        "Trending",
+        "Subscriptions",
+        "Library",
+        "Upload",
+        "Sign In"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "youtube_user_profile"
+    },
+    "generated_at": "2025-11-07T08:11:28.098702+00:00",
+    "goal_snapshot": "find a video about lmms on youtube",
+    "search": {
+      "alternate_urls": [
+        "https://www.youtube.com/feed/trending",
+        "https://www.youtube.com/feed/subscriptions"
+      ],
+      "login_hint": "Users can log in using a Google account to access personalized features.",
+      "notes": "The search bar is prominently located at the top of the page for easy access.",
+      "primary_url": "https://www.youtube.com/",
+      "profile_hint": "youtube_user_profile",
+      "ui_keywords": [
+        "Search",
+        "Home",
+        "Trending",
+        "Subscriptions",
+        "Library",
+        "Upload",
+        "Sign In"
       ]
     }
   }
