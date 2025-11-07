@@ -31,7 +31,7 @@ OVERLAY_LOCATORS = [
 
 
 client = OpenAI()
-DEFAULT_GOAL = "make a database on notion"
+DEFAULT_GOAL = "change the language in notion to french"
 MAX_ACTIONS = 12
 
 

@@ -3,174 +3,91 @@
     "action_snapshot": "create_project",
     "config": {
       "base_url": "https://linear.app",
-      "extra_prompt": "Ensure to check for any onboarding tutorials that may assist in project setup.",
+      "extra_prompt": "To create a project, navigate to the 'Dashboard' and select 'Create Project' from the sidebar.",
       "label_hints": [
         "Create Project",
         "New Issue",
         "Dashboard",
-        "Workspace",
         "Teams",
         "Roadmap",
-        "Settings"
+        "Settings",
+        "Integrations"
       ],
       "launch_kwargs": {
         "headless": true
       },
-      "profile_hint": "linear_project_creator"
+      "profile_hint": "linear_project_profile"
     },
-    "generated_at": "2025-11-07T04:57:44.101680",
-    "goal_snapshot": "create a project in linear",
+    "generated_at": "2025-11-07T09:06:34.930920+00:00",
+    "goal_snapshot": "make a project in linear",
     "search": {
       "alternate_urls": [
         "https://linear.app/docs",
-        "https://linear.app/help"
+        "https://linear.app/blog",
+        "https://linear.app/support"
       ],
-      "login_hint": "Users typically authenticate via email and password or single sign-on (SSO).",
-      "notes": "Ensure to check for any onboarding tutorials that may assist in project setup.",
+      "login_hint": "Authentication typically requires a Google account or email/password combination.",
+      "notes": "The UI is clean and minimalistic; features are accessible via the sidebar.",
       "primary_url": "https://linear.app",
-      "profile_hint": "linear_project_creator",
+      "profile_hint": "linear_project_profile",
       "ui_keywords": [
         "Create Project",
         "New Issue",
         "Dashboard",
-        "Workspace",
         "Teams",
         "Roadmap",
-        "Settings"
-      ]
-    }
-  },
-  "linkedin": {
-    "action_snapshot": "search_jobs",
-    "config": {
-      "base_url": "https://www.linkedin.com/jobs",
-      "extra_prompt": "Ensure to log in using your email and password or single sign-on options to access job listings.",
-      "label_hints": [
-        "Sign In",
-        "Join now",
-        "Jobs",
-        "Search",
-        "Profile",
-        "Connections",
-        "Messages",
-        "Notifications"
-      ],
-      "launch_kwargs": {
-        "headless": true
-      },
-      "profile_hint": "linkedin_swe_intern"
-    },
-    "generated_at": "2025-11-07T08:40:15.441270+00:00",
-    "goal_snapshot": "find a job for SWE intern",
-    "search": {
-      "alternate_urls": [
-        "https://www.linkedin.com/jobs",
-        "https://www.linkedin.com/in",
-        "https://www.linkedin.com/help/linkedin"
-      ],
-      "login_hint": "Users authenticate using their email and password or via single sign-on options.",
-      "notes": "The layout is dynamic and may change based on user interactions; job postings are prominently displayed on the dashboard.",
-      "primary_url": "https://www.linkedin.com",
-      "profile_hint": "linkedin_swe_intern",
-      "ui_keywords": [
-        "Sign In",
-        "Join now",
-        "Jobs",
-        "Search",
-        "Profile",
-        "Connections",
-        "Messages",
-        "Notifications"
+        "Settings",
+        "Integrations"
       ]
     }
   },
   "notion": {
     "action_snapshot": "create_database",
     "config": {
-      "base_url": "https://www.notion.so",
-      "extra_prompt": "To create a database, navigate to 'New Page' and select 'Database' from the options.",
+      "base_url": "https://www.notion.so/",
+      "extra_prompt": "To create a new database, navigate to 'New Page' and select 'Database'. You can choose from tables, boards, or lists based on your needs.",
       "label_hints": [
         "New Page",
         "Database",
         "Templates",
-        "Workspace",
         "Share",
-        "Settings"
+        "Invite",
+        "Settings",
+        "Workspace"
       ],
       "launch_kwargs": {
         "headless": true
       },
-      "profile_hint": "notion_automation_profile"
+      "profile_hint": "notion_profile"
     },
-    "generated_at": "2025-11-07T05:31:34.259700",
-    "goal_snapshot": "create a database in notion",
+    "generated_at": "2025-11-07T09:05:19.327885+00:00",
+    "goal_snapshot": "make a database on notion",
     "search": {
       "alternate_urls": [
         "https://www.notion.so/help",
         "https://www.notion.so/desktop",
-        "https://www.notion.so/guide"
+        "https://www.notion.so/templates"
       ],
-      "login_hint": "Users can log in using email/password or single sign-on (SSO) options.",
-      "notes": "Notion has a flexible layout; databases can be created as pages or inline within other pages.",
-      "primary_url": "https://www.notion.so",
-      "profile_hint": "notion_automation_profile",
+      "login_hint": "Authentication typically requires an email and password or a single sign-on option.",
+      "notes": "Notion's interface is highly customizable; databases can be created as tables, boards, or lists.",
+      "primary_url": "https://www.notion.so/",
+      "profile_hint": "notion_profile",
       "ui_keywords": [
         "New Page",
         "Database",
         "Templates",
-        "Workspace",
         "Share",
-        "Settings"
-      ]
-    }
-  },
-  "python": {
-    "action_snapshot": "run_script",
-    "config": {
-      "base_url": "https://www.python.org/",
-      "extra_prompt": "Consider exploring the documentation and community resources for a comprehensive understanding of Python.",
-      "label_hints": [
-        "Download",
-        "Documentation",
-        "Packages",
-        "Community",
-        "Getting Started",
-        "IDE",
-        "Tutorials"
-      ],
-      "launch_kwargs": {
-        "headless": true
-      },
-      "profile_hint": "python_user_profile"
-    },
-    "generated_at": "2025-11-07T04:57:18.857735",
-    "goal_snapshot": "\"/Users/saivivekvenna/Desktop/live web agent /webagent/bin/python\" \"/Users/saivivekvenna/Desktop/live web agent /playground.py\"",
-    "search": {
-      "alternate_urls": [
-        "https://docs.python.org/3/",
-        "https://pypi.org/",
-        "https://www.anaconda.com/"
-      ],
-      "login_hint": "Python does not require a login for general access; however, some services like PyPI may require an account for publishing packages.",
-      "notes": "The layout is straightforward, with a focus on downloads and documentation. Be aware of version-specific documentation links.",
-      "primary_url": "https://www.python.org/",
-      "profile_hint": "python_user_profile",
-      "ui_keywords": [
-        "Download",
-        "Documentation",
-        "Packages",
-        "Community",
-        "Getting Started",
-        "IDE",
-        "Tutorials"
+        "Invite",
+        "Settings",
+        "Workspace"
       ]
     }
   },
   "youtube": {
-    "action_snapshot": "search_video",
+    "action_snapshot": "find_video",
     "config": {
       "base_url": "https://www.youtube.com/",
-      "extra_prompt": "Use the search bar at the top of the page to find videos about LMMS.",
+      "extra_prompt": "Use the search bar at the top to find videos about how LLMs work.",
       "label_hints": [
         "Search",
         "Home",
@@ -183,19 +100,19 @@
       "launch_kwargs": {
         "headless": true
       },
-      "profile_hint": "youtube_user_profile"
+      "profile_hint": "youtube_profile"
     },
-    "generated_at": "2025-11-07T08:11:28.098702+00:00",
-    "goal_snapshot": "find a video about lmms on youtube",
+    "generated_at": "2025-11-07T09:30:54.444053+00:00",
+    "goal_snapshot": "find a youtube video about how llms work",
     "search": {
       "alternate_urls": [
         "https://www.youtube.com/feed/trending",
-        "https://www.youtube.com/feed/subscriptions"
+        "https://www.youtube.com/results"
       ],
       "login_hint": "Users can log in using a Google account to access personalized features.",
-      "notes": "The search bar is prominently located at the top of the page for easy access.",
+      "notes": "The search bar is prominently located at the top of the page for easy access to video searches.",
       "primary_url": "https://www.youtube.com/",
-      "profile_hint": "youtube_user_profile",
+      "profile_hint": "youtube_profile",
       "ui_keywords": [
         "Search",
         "Home",
