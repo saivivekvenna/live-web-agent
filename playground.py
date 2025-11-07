@@ -31,8 +31,10 @@ OVERLAY_LOCATORS = [
 
 
 client = OpenAI()
-DEFAULT_GOAL = "make a database on notion"
+DEFAULT_GOAL = "create a new project in linear"
 MAX_ACTIONS = 12
+ACTION_SNAPSHOT_COUNTER = 0
+HIGHLIGHT_BORDER_COLOR = "#ff9800"
 
 
 @dataclass
@@ -51,6 +53,80 @@ class IntegrationConfig:
    extra_prompt: str = ""
    launch_kwargs: dict = field(default_factory=dict)
 DEFAULT_INTEGRATIONS: Dict[str, IntegrationConfig] = {}
+
+
+def _slugify_label(label: str, max_tokens: int = 5) -> str:
+   tokens = [tok for tok in re.split(r"\W+", label.lower()) if tok]
+   if not tokens:
+       return "target"
+   return "_".join(tokens[:max_tokens])
+
+
+def _highlight_locator(locator, color: str = HIGHLIGHT_BORDER_COLOR) -> bool:
+   try:
+       locator.scroll_into_view_if_needed(timeout=2000)
+   except Exception:
+       pass
+
+   try:
+       locator.evaluate(
+           """(element, data) => {
+               if (!element) {
+                   return;
+               }
+               if (typeof element.scrollIntoView === 'function') {
+                   element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+               }
+               if (!element.__codexHighlightData) {
+                   element.__codexHighlightData = {
+                       outline: element.style.outline || '',
+                       boxShadow: element.style.boxShadow || '',
+                       transition: element.style.transition || ''
+                   };
+               }
+               element.style.transition = 'outline 0.12s ease, box-shadow 0.12s ease';
+               element.style.outline = `3px solid ${data.color}`;
+               element.style.boxShadow = `0 0 0 3px ${data.color}55`;
+           }""",
+           {"color": color},
+       )
+       return True
+   except Exception as exc:
+       print(f"  • Failed to apply highlight: {exc}")
+       return False
+
+
+def _clear_highlight(locator) -> None:
+   try:
+       locator.evaluate(
+           """(element) => {
+               if (!element || !element.__codexHighlightData) {
+                   return;
+               }
+               const data = element.__codexHighlightData;
+               element.style.outline = data.outline;
+               element.style.boxShadow = data.boxShadow;
+               element.style.transition = data.transition;
+               delete element.__codexHighlightData;
+           }"""
+       )
+   except Exception:
+       pass
+
+
+def _capture_action_screenshot(page, label: str, action: str = "click") -> Optional[str]:
+   global ACTION_SNAPSHOT_COUNTER
+   try:
+       ACTION_SNAPSHOT_COUNTER += 1
+       slug = _slugify_label(f"{action}_{label}")
+       timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-%f")
+       SCREENSHOT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+       path = SCREENSHOT_OUTPUT_DIR / f"step{ACTION_SNAPSHOT_COUNTER:02d}_{slug}_{timestamp}.png"
+       page.screenshot(path=str(path), full_page=True)
+       return str(path)
+   except Exception as exc:
+       print(f"  • Action screenshot failed: {exc}")
+       return None
 
 
 
@@ -500,8 +576,24 @@ def _attempt_click(
                continue
            target = locator.first
            target.wait_for(state="visible", timeout=10000)
-           target.click(timeout=10000)
-           return True, f"Clicked via {desc}"
+           highlight_applied = False
+           try:
+               highlight_applied = _highlight_locator(target)
+               if highlight_applied:
+                   try:
+                       page.wait_for_timeout(150)
+                   except Exception:
+                       pass
+               screenshot_path = _capture_action_screenshot(page, label, action="click")
+               if screenshot_path:
+                   print(f"    📸 Highlight screenshot saved: {screenshot_path}")
+               target.click(timeout=10000)
+               return True, f"Clicked via {desc}"
+           except Exception as exc:
+               last_error = str(exc)
+           finally:
+               if highlight_applied:
+                   _clear_highlight(target)
        except Exception as exc:
            last_error = str(exc)
    return False, f"All strategies failed. Last error: {last_error}"
