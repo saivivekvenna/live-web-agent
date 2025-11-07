@@ -1,43 +1,4 @@
 {
-  "calendar_app": {
-    "action_snapshot": "change_week_start",
-    "config": {
-      "base_url": "https://www.calendarapp.com/dashboard",
-      "extra_prompt": "Please navigate to the Settings section to change the week start to Monday.",
-      "label_hints": [
-        "Settings",
-        "Preferences",
-        "Week Start",
-        "Monday",
-        "Save",
-        "Apply"
-      ],
-      "launch_kwargs": {
-        "headless": true
-      },
-      "profile_hint": "calendar_app_user_profile"
-    },
-    "generated_at": "2025-11-07T05:56:21.371265+00:00",
-    "goal_snapshot": "change the settings to me week starts on monday",
-    "search": {
-      "alternate_urls": [
-        "https://www.calendarapp.com/help",
-        "https://www.calendarapp.com/support"
-      ],
-      "login_hint": "Users typically authenticate using email and password.",
-      "notes": "Ensure to check for any regional settings that may override the week start preference.",
-      "primary_url": "https://www.calendarapp.com/dashboard",
-      "profile_hint": "calendar_app_user_profile",
-      "ui_keywords": [
-        "Settings",
-        "Preferences",
-        "Week Start",
-        "Monday",
-        "Save",
-        "Apply"
-      ]
-    }
-  },
   "linear": {
     "action_snapshot": "create_project",
     "config": {

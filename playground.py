@@ -20,11 +20,8 @@ from bots._profile_launch import launch_persistent, shutdown as shutdown_persist
 
 PROFILES_ROOT = Path("profiles")
 GENERATED_CONFIG_PATH = Path("generated_integrations.json")
-
-NOTION_URL = "https://www.notion.so/"
-LINEAR_URL = "https://linear.app/"
-PROFILE_DIR = str(PROFILES_ROOT / "notion")
-LINEAR_PROFILE_DIR = str(PROFILES_ROOT / "linear")
+SCREENSHOT_OUTPUT_DIR = Path("state_captures")
+CURRENT_HOME_URL: Optional[str] = None
 OVERLAY_LOCATORS = [
    ("role[dialog]", lambda page: page.locator("[role='dialog']")),
    ("aria-modal", lambda page: page.locator("[aria-modal='true']")),
@@ -33,12 +30,9 @@ OVERLAY_LOCATORS = [
 ]
 
 
-SCREENSHOT_PATH = "notion_database_click.png"
 client = OpenAI()
-DEFAULT_GOAL = "find a job for SWE intern"
+DEFAULT_GOAL = "make a database on notion"
 MAX_ACTIONS = 12
-
-
 
 
 @dataclass
@@ -48,10 +42,6 @@ class ActionRecord:
    message: str
    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
    state: Dict[str, Any] = field(default_factory=dict)
-
-
-
-
 @dataclass
 class IntegrationConfig:
    provider: str
@@ -60,25 +50,7 @@ class IntegrationConfig:
    label_hints: List[str] = field(default_factory=list)
    extra_prompt: str = ""
    launch_kwargs: dict = field(default_factory=dict)
-
-
-
-
-DEFAULT_INTEGRATIONS: Dict[str, IntegrationConfig] = {
-   "notion": IntegrationConfig(
-       provider="notion",
-       base_url=NOTION_URL,
-       profile_dir=PROFILE_DIR,
-       extra_prompt="Notion often opens creation menus in side panels or dialogs. Pay attention to menu items related to databases, forms, or new content.",
-   ),
-   "linear": IntegrationConfig(
-       provider="linear",
-       base_url=LINEAR_URL,
-       profile_dir=LINEAR_PROFILE_DIR,
-       label_hints=["Create issue", "New issue", "Create task"],
-       extra_prompt="Linear surfaces creation actions via the C shortcut and the left sidebar. Team selection is usually required before creating issues.",
-   ),
-}
+DEFAULT_INTEGRATIONS: Dict[str, IntegrationConfig] = {}
 
 
 
@@ -133,25 +105,21 @@ def _overlay_present(page) -> bool:
 
 
 
-def _looks_like_dashboard(page) -> bool:
+def _looks_like_dashboard(page, home_url: Optional[str] = None) -> bool:
    """
-   Heuristic to detect when we are still on the Notion home dashboard.
+   Heuristic to detect when we are still on the provider's primary landing page.
    """
    if _overlay_present(page):
        return False
 
 
-   try:
-       current_url = page.url.rstrip("/")
-       if current_url.lower() == NOTION_URL.rstrip("/").lower():
-           return True
-   except Exception:
-       pass
-
+   normalized_home = (home_url or CURRENT_HOME_URL or "").rstrip("/").lower()
+   if not normalized_home:
+       return False
 
    try:
-       sidebar_add_new = page.get_by_role("button", name="Add new")
-       if sidebar_add_new.count() > 0:
+       current_url = page.url.rstrip("/").lower()
+       if current_url.startswith(normalized_home):
            return True
    except Exception:
        pass
@@ -162,7 +130,9 @@ def _looks_like_dashboard(page) -> bool:
 
 
 
-def _summarize_page_state(page, dom_limit: int = 30000, excerpt_limit: int = 2000) -> Dict[str, Any]:
+def _summarize_page_state(
+   page, dom_limit: int = 30000, excerpt_limit: int = 2000, home_url: Optional[str] = None
+) -> Dict[str, Any]:
    """
    Capture a structured snapshot of the current page so the planner can reason over it.
    """
@@ -189,7 +159,10 @@ def _summarize_page_state(page, dom_limit: int = 30000, excerpt_limit: int = 200
        state["title"] = ""
 
    state["overlay_visible"] = _overlay_present(page)
-   state["dashboard_hint"] = "likely_on_dashboard" if _looks_like_dashboard(page) else "not_clearly_dashboard"
+   dashboard_home = home_url or CURRENT_HOME_URL
+   state["dashboard_hint"] = (
+       "likely_on_dashboard" if _looks_like_dashboard(page, dashboard_home) else "not_clearly_dashboard"
+   )
 
    def _collect_text_list(selector: str, max_items: int = 8) -> List[str]:
        try:
@@ -815,7 +788,7 @@ def _classify_intent_llm(goal: str, provider_hint: Optional[str] = None) -> Opti
 
 
        Respond with a JSON object using the keys "provider" and "action".
-       Keep providers in lowercase (e.g., "notion", "linear").
+       Keep providers in lowercase (e.g., "workspace", "app").
        Use snake_case verbs for the action (e.g., "create_database").
        If the goal is unclear, respond with {{"provider": null, "action": null}}.
        """
@@ -846,10 +819,16 @@ def _classify_intent_llm(goal: str, provider_hint: Optional[str] = None) -> Opti
 
 def _fallback_provider(goal: str) -> Optional[str]:
    normalized = goal.lower()
-   if "notion" in normalized:
-       return "notion"
-   if "linear" in normalized:
-       return "linear"
+   domain_match = re.search(r"(?:https?://)?([a-z0-9.-]+)\.[a-z]{2,}", normalized)
+   if domain_match:
+       host = domain_match.group(1)
+       return host.split(".")[0]
+
+   tokens = [tok for tok in re.split(r"\W+", normalized) if tok]
+   skip_words = {"create", "make", "build", "find", "get", "open", "add", "new", "a", "an", "the", "to", "for", "in", "on"}
+   for token in reversed(tokens):
+       if token not in skip_words:
+           return token
    return None
 
 
@@ -862,6 +841,14 @@ def _slugify_goal(goal: str, max_tokens: int = 4) -> str:
    return "_".join(tokens[:max_tokens])
 
 
+
+
+def _build_screenshot_path(goal: str, provider: str) -> str:
+   slug = _slugify_goal(f"{provider}_{goal}", max_tokens=6)
+   timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
+   SCREENSHOT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+   filename = f"{slug}_{timestamp}.png"
+   return str(SCREENSHOT_OUTPUT_DIR / filename)
 
 
 def parse_intent(goal: str) -> tuple[str, str]:
@@ -1040,6 +1027,16 @@ def _resolve_profile_dir_path(
 
 
 
+def _baseline_integration_config(provider: str) -> IntegrationConfig:
+   fallback_dir = str(PROFILES_ROOT / _slugify_identifier(provider))
+   profile_dir = _resolve_profile_dir_path(provider, fallback_dir=fallback_dir)
+   return IntegrationConfig(
+       provider=provider,
+       base_url=_fallback_base_url(provider),
+       profile_dir=profile_dir,
+   )
+
+
 def _fallback_base_url(provider: str) -> str:
    slug = re.sub(r"[^a-z0-9]+", "", provider.lower()) or "app"
    return f"https://{slug}.com/"
@@ -1183,19 +1180,19 @@ def resolve_integration_config(goal: str, provider: str, action: str) -> Integra
            _save_generated_integration_cache(cache)
 
    fallback = DEFAULT_INTEGRATIONS.get(provider)
-   if not payload and not fallback:
-       raise RuntimeError(
-           f"Unable to synthesize integration config for '{provider}'. "
-           "Provide more context or add a manual preset."
-       )
+   fallback_source = "preset" if fallback else "baseline"
+   if not fallback:
+       fallback = _baseline_integration_config(provider)
 
    config = _materialize_integration_config(provider, payload, fallback)
    if generated:
        print(f"🧬 Integration config for '{provider}' synthesized via discovery agent.")
    elif used_cache:
        print(f"♻️ Loaded cached discovery config for '{provider}'.")
-   elif fallback and not payload:
+   elif not payload and fallback_source == "preset":
        print(f"ℹ️ Using built-in preset for '{provider}'.")
+   elif not payload:
+       print(f"ℹ️ Using heuristic baseline config for '{provider}'.")
    return config
 
 
@@ -1222,6 +1219,8 @@ def main() -> None:
 
 
    headless = _resolve_headless_preference(config.launch_kwargs.get("headless", False))
+   global CURRENT_HOME_URL
+   CURRENT_HOME_URL = config.base_url
 
 
    playwright = None
@@ -1396,12 +1395,14 @@ def main() -> None:
            pass
 
 
-       page.screenshot(path=SCREENSHOT_PATH, full_page=True)
-       print(f"📸 Screenshot saved: {SCREENSHOT_PATH}")
+       screenshot_path = _build_screenshot_path(goal, provider)
+       page.screenshot(path=screenshot_path, full_page=True)
+       print(f"📸 Screenshot saved: {screenshot_path}")
 
 
        input("✅ Done. Inspect the page, then press Enter to close the browser…")
    finally:
+       CURRENT_HOME_URL = None
        shutdown_persistent(playwright, context)
 
 
