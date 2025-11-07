@@ -1,4 +1,43 @@
 {
+  "app": {
+    "action_snapshot": "change_language",
+    "config": {
+      "base_url": "https://www.notion.so",
+      "extra_prompt": "To change the language to French, navigate to Settings > Language and select French from the dropdown.",
+      "label_hints": [
+        "Settings",
+        "Language",
+        "French",
+        "Profile",
+        "Workspace",
+        "Account"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "notion_french_profile"
+    },
+    "generated_at": "2025-11-07T19:48:25.891369+00:00",
+    "goal_snapshot": "change the language in notion to french",
+    "search": {
+      "alternate_urls": [
+        "https://www.notion.so/help",
+        "https://www.notion.so/faq"
+      ],
+      "login_hint": "Users can log in using their email and password or via single sign-on (SSO) options like Google.",
+      "notes": "To change the language, navigate to Settings > Language and select French from the dropdown.",
+      "primary_url": "https://www.notion.so",
+      "profile_hint": "notion_french_profile",
+      "ui_keywords": [
+        "Settings",
+        "Language",
+        "French",
+        "Profile",
+        "Workspace",
+        "Account"
+      ]
+    }
+  },
   "linear": {
     "action_snapshot": "create_project",
     "config": {
