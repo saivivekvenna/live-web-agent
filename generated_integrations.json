@@ -1,0 +1,164 @@
+{
+  "calendar_app": {
+    "action_snapshot": "change_week_start",
+    "config": {
+      "base_url": "https://www.calendarapp.com/dashboard",
+      "extra_prompt": "Please navigate to the Settings section to change the week start to Monday.",
+      "label_hints": [
+        "Settings",
+        "Preferences",
+        "Week Start",
+        "Monday",
+        "Save",
+        "Apply"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "calendar_app_user_profile"
+    },
+    "generated_at": "2025-11-07T05:56:21.371265+00:00",
+    "goal_snapshot": "change the settings to me week starts on monday",
+    "search": {
+      "alternate_urls": [
+        "https://www.calendarapp.com/help",
+        "https://www.calendarapp.com/support"
+      ],
+      "login_hint": "Users typically authenticate using email and password.",
+      "notes": "Ensure to check for any regional settings that may override the week start preference.",
+      "primary_url": "https://www.calendarapp.com/dashboard",
+      "profile_hint": "calendar_app_user_profile",
+      "ui_keywords": [
+        "Settings",
+        "Preferences",
+        "Week Start",
+        "Monday",
+        "Save",
+        "Apply"
+      ]
+    }
+  },
+  "linear": {
+    "action_snapshot": "create_project",
+    "config": {
+      "base_url": "https://linear.app",
+      "extra_prompt": "Ensure to check for any onboarding tutorials that may assist in project setup.",
+      "label_hints": [
+        "Create Project",
+        "New Issue",
+        "Dashboard",
+        "Workspace",
+        "Teams",
+        "Roadmap",
+        "Settings"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "linear_project_creator"
+    },
+    "generated_at": "2025-11-07T04:57:44.101680",
+    "goal_snapshot": "create a project in linear",
+    "search": {
+      "alternate_urls": [
+        "https://linear.app/docs",
+        "https://linear.app/help"
+      ],
+      "login_hint": "Users typically authenticate via email and password or single sign-on (SSO).",
+      "notes": "Ensure to check for any onboarding tutorials that may assist in project setup.",
+      "primary_url": "https://linear.app",
+      "profile_hint": "linear_project_creator",
+      "ui_keywords": [
+        "Create Project",
+        "New Issue",
+        "Dashboard",
+        "Workspace",
+        "Teams",
+        "Roadmap",
+        "Settings"
+      ]
+    }
+  },
+  "notion": {
+    "action_snapshot": "create_database",
+    "config": {
+      "base_url": "https://www.notion.so",
+      "extra_prompt": "To create a database, navigate to 'New Page' and select 'Database' from the options.",
+      "label_hints": [
+        "New Page",
+        "Database",
+        "Templates",
+        "Workspace",
+        "Share",
+        "Settings"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "notion_automation_profile"
+    },
+    "generated_at": "2025-11-07T05:31:34.259700",
+    "goal_snapshot": "create a database in notion",
+    "search": {
+      "alternate_urls": [
+        "https://www.notion.so/help",
+        "https://www.notion.so/desktop",
+        "https://www.notion.so/guide"
+      ],
+      "login_hint": "Users can log in using email/password or single sign-on (SSO) options.",
+      "notes": "Notion has a flexible layout; databases can be created as pages or inline within other pages.",
+      "primary_url": "https://www.notion.so",
+      "profile_hint": "notion_automation_profile",
+      "ui_keywords": [
+        "New Page",
+        "Database",
+        "Templates",
+        "Workspace",
+        "Share",
+        "Settings"
+      ]
+    }
+  },
+  "python": {
+    "action_snapshot": "run_script",
+    "config": {
+      "base_url": "https://www.python.org/",
+      "extra_prompt": "Consider exploring the documentation and community resources for a comprehensive understanding of Python.",
+      "label_hints": [
+        "Download",
+        "Documentation",
+        "Packages",
+        "Community",
+        "Getting Started",
+        "IDE",
+        "Tutorials"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "python_user_profile"
+    },
+    "generated_at": "2025-11-07T04:57:18.857735",
+    "goal_snapshot": "\"/Users/saivivekvenna/Desktop/live web agent /webagent/bin/python\" \"/Users/saivivekvenna/Desktop/live web agent /playground.py\"",
+    "search": {
+      "alternate_urls": [
+        "https://docs.python.org/3/",
+        "https://pypi.org/",
+        "https://www.anaconda.com/"
+      ],
+      "login_hint": "Python does not require a login for general access; however, some services like PyPI may require an account for publishing packages.",
+      "notes": "The layout is straightforward, with a focus on downloads and documentation. Be aware of version-specific documentation links.",
+      "primary_url": "https://www.python.org/",
+      "profile_hint": "python_user_profile",
+      "ui_keywords": [
+        "Download",
+        "Documentation",
+        "Packages",
+        "Community",
+        "Getting Started",
+        "IDE",
+        "Tutorials"
+      ]
+    }
+  }
+}
