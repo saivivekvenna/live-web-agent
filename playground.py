@@ -17,7 +17,8 @@ from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from bots._profile_launch import launch_persistent, shutdown as shutdown_persistent
 
-
+# log enteries for each attempted action. 
+# used to show the planner what happened. also called during fallback to know what works and didnt. 
 @dataclass
 class ActionRecord:
    label: str
@@ -26,7 +27,7 @@ class ActionRecord:
    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
    state: Dict[str, Any] = field(default_factory=dict)
 
-
+#better context used in the action log. 
 @dataclass
 class ContextEntry:
    action: str
@@ -35,9 +36,10 @@ class ContextEntry:
    success: Optional[bool] = None
    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
+   #this turns the things that happened into a one liner for the LLM. 
    def sentence(self) -> str:
-       if self.success is None:
-           status = "observed"
+       if self.success is None: #choosing status 
+           status = "observed" 
        else:
            status = "succeeded" if self.success else "failed"
        selector = self.selector.strip() if self.selector else ""
@@ -56,6 +58,7 @@ class ContextEntry:
            sentence = f"{sentence}: {observation}"
        return sentence
 
+    #checks to see if the previous action did the same thing as the current action. this is so we dont spam the LLM with the same message.
    def fingerprint(self) -> str:
        return "|".join(
            [
@@ -66,7 +69,7 @@ class ContextEntry:
            ]
        )
 
-
+#takes in recent actions and dom
 class InteractionContextMemory:
    def __init__(self, capacity: int = 30):
        self.capacity = capacity
@@ -74,6 +77,7 @@ class InteractionContextMemory:
        self._latest_dom_snapshot: str = ""
        self._latest_dom_timestamp: Optional[datetime] = None
 
+    #clears memory
    def clear(self) -> None:
        self._entries.clear()
        self._latest_dom_snapshot = ""
@@ -107,11 +111,13 @@ class InteractionContextMemory:
            self._latest_dom_snapshot = snapshot
            self._latest_dom_timestamp = entry.timestamp
 
+    #return the last sentence for the hollistic goal checker
    def recent_sentences(self, limit: int = 6) -> List[str]:
        if limit <= 0:
            return []
        return [entry.sentence() for entry in self._entries[-limit:]]
 
+ 
    def latest_dom_snapshot(self) -> str:
        return self._latest_dom_snapshot
 
@@ -127,16 +133,17 @@ class InteractionContextMemory:
            return ""
        return value.strip()
 
+#### goal checking #### 
 
 @dataclass
 class CheckerResult:
     name: str
-    passed: bool
-    confidence: float
+    passed: bool #did we pass or not
+    confidence: float # 0-1 value 
     evidence: List[str] = field(default_factory=list)
     error: Optional[str] = None
 
-
+#generate a summary
 @dataclass
 class GoalCheckReport:
     reached: bool
@@ -146,10 +153,14 @@ class GoalCheckReport:
     results: List[CheckerResult] = field(default_factory=list)
 
 
+#GLOBAL CONSTANTS 
+
 PROFILES_ROOT = Path("profiles")
 GENERATED_CONFIG_PATH = Path("generated_integrations.json")
 SCREENSHOT_OUTPUT_DIR = Path("state_captures")
 CURRENT_HOME_URL: Optional[str] = None
+
+#finding overlays for menus and what not
 OVERLAY_LOCATORS = [
    ("role[dialog]", lambda page: page.locator("[role='dialog']")),
    ("aria-modal", lambda page: page.locator("[aria-modal='true']")),
@@ -157,9 +168,8 @@ OVERLAY_LOCATORS = [
    ("role[listbox]", lambda page: page.locator("[role='listbox']")),
 ]
 
-
 client = OpenAI()
-DEFAULT_GOAL = "change the language to french in notion"
+DEFAULT_GOAL = "change the language to french in notion"  #EDIT THIS WHEN TESTING AND WHAT NOT
 MAX_ACTIONS = 12
 ACTION_SNAPSHOT_COUNTER = 0
 HIGHLIGHT_BORDER_COLOR = "#ff9800"
@@ -457,7 +467,7 @@ def _run_rule_goal_checker(page_state: Optional[Dict[str, Any]], keywords: List[
         evidence=evidence,
     )
 
-
+#goal checker.
 def _run_holistic_goal_checker(
     goal: str,
     page_state: Optional[Dict[str, Any]],
