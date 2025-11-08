@@ -342,7 +342,7 @@ class RunCaptureLog:
 
 PROFILES_ROOT = Path("profiles")
 GENERATED_CONFIG_PATH = Path("generated_integrations.json")
-SCREENSHOT_OUTPUT_DIR = Path("state_captures")
+SCREENSHOT_OUTPUT_DIR = Path("live_state_captures")
 CURRENT_HOME_URL: Optional[str] = None
 
 #finding overlays for menus and what not
