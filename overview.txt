@@ -5,7 +5,7 @@ persistent Playwright profile
 
 Main loop:
 Summarize the current page (html)
-Submit summary and goal to llm to pick best choice.
+Submit summary and goal to llm to pick best choice. 
 Execute that action
 Capture current html + screenshot 
 Ask the goal checker if we’re “done enough” yet
