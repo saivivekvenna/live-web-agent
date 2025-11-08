@@ -354,7 +354,7 @@ OVERLAY_LOCATORS = [
 ]
 
 client = OpenAI()
-DEFAULT_GOAL = "create a new project in asana"  #EDIT THIS WHEN TESTING AND WHAT NOT
+DEFAULT_GOAL = "personalize the notion ai agent such that its name becomes the lebron"  #EDIT THIS WHEN TESTING AND WHAT NOT
 MAX_ACTIONS = 12
 ACTION_SNAPSHOT_COUNTER = 0
 HIGHLIGHT_BORDER_COLOR = "#ff9800"
