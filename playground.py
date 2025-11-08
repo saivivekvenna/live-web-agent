@@ -3,6 +3,7 @@ import html
 import json
 import os
 import re
+import shutil
 import sys
 import textwrap
 from dataclasses import dataclass, field, replace
@@ -92,25 +93,29 @@ class InteractionContextMemory:
        observation: str,
        success: Optional[bool],
        dom_snapshot: Optional[str],
-   ) -> None:
+   ) -> ContextEntry:
        entry = ContextEntry(
            action=action.strip(),
            selector=selector.strip(),
            observation=self._sanitize_text(observation),
            success=success,
        )
+       stored_entry: ContextEntry
        if self._entries and self._entries[-1].fingerprint() == entry.fingerprint():
            # Update timestamp to reflect latest occurrence but avoid duplicate text.
            self._entries[-1].timestamp = entry.timestamp
+           stored_entry = self._entries[-1]
        else:
            self._entries.append(entry)
            if len(self._entries) > self.capacity:
                self._entries.pop(0)
+           stored_entry = entry
 
        snapshot = self._sanitize_dom(dom_snapshot)
        if snapshot:
            self._latest_dom_snapshot = snapshot
            self._latest_dom_timestamp = entry.timestamp
+       return stored_entry
 
     #return the last sentence for the hollistic goal checker
    def recent_sentences(self, limit: int = 6) -> List[str]:
@@ -154,6 +159,185 @@ class GoalCheckReport:
     results: List[CheckerResult] = field(default_factory=list)
 
 
+@dataclass
+class RunCaptureEntry:
+   step_index: int
+   sentence: str
+   screenshot_path: Path
+   timestamp: datetime
+
+
+class RunCaptureLog:
+   def __init__(self, output_dir: Path):
+       self.output_dir = output_dir
+       self._entries: List[RunCaptureEntry] = []
+       self._goal: str = ""
+       self._provider: str = ""
+       self._run_slug: str = ""
+       self._run_dir: Optional[Path] = None
+       self._steps_file: Optional[Path] = None
+       self._start_time: Optional[datetime] = None
+       self._active = False
+       self._step_counter = 0
+
+   def start(self, goal: str, provider: Optional[str]) -> None:
+       self.output_dir.mkdir(parents=True, exist_ok=True)
+       self._entries.clear()
+       self._goal = goal
+       self._provider = (provider or "unknown").strip() or "unknown"
+       self._start_time = datetime.now(UTC)
+       slug = _slugify_goal(f"{self._provider}_{goal}", max_tokens=6)
+       timestamp = self._start_time.strftime("%Y%m%d-%H%M%S")
+       self._run_slug = f"{slug}_{timestamp}"
+       self._run_dir = self.output_dir / f"run_{self._run_slug}"
+       self._run_dir.mkdir(parents=True, exist_ok=True)
+       self._steps_file = self._run_dir / "steps.txt"
+       self._active = True
+       self._step_counter = 0
+
+   def record_step(
+       self,
+       sentence: str,
+       screenshot_path: Optional[str],
+       timestamp: Optional[datetime] = None,
+   ) -> None:
+       if not self._active or not screenshot_path or not self._run_dir:
+           return
+       source_path = Path(screenshot_path)
+       if not source_path.exists():
+           return
+       ts = timestamp or datetime.now(UTC)
+       self._step_counter += 1
+       dest_name = f"step{self._step_counter:02d}_{source_path.name}"
+       dest_path = self._run_dir / dest_name
+       try:
+           shutil.copy2(source_path, dest_path)
+       except Exception as exc:
+           print(f"  • Failed to copy screenshot for run capture: {exc}")
+           return
+       safe_sentence = sentence.strip() or "Action recorded."
+       self._entries.append(
+           RunCaptureEntry(
+               step_index=self._step_counter,
+               sentence=safe_sentence,
+               screenshot_path=dest_path,
+               timestamp=ts,
+           )
+       )
+
+   def record_summary(self, summary: str, screenshot_path: Optional[str]) -> None:
+       note = summary.strip() or "Run complete."
+       self.record_step(note, screenshot_path)
+
+   def finalize(self, goal_report: Optional[GoalCheckReport]) -> Optional[Path]:
+       if not self._active or not self._run_dir or not self._steps_file:
+           self._reset()
+           return None
+       try:
+           self._write_steps_file(goal_report)
+           print(f"🗂️ Run capture saved in {self._run_dir}")
+           return self._run_dir
+       finally:
+           self._reset()
+
+   def _write_steps_file(self, goal_report: Optional[GoalCheckReport]) -> None:
+       lines: List[str] = [
+           f"Goal: {self._goal or 'Unknown'}",
+           f"Provider: {self._provider or 'unknown'}",
+       ]
+       if self._start_time:
+           lines.append(f"Started: {self._start_time.isoformat()}")
+       if goal_report:
+           status = "reached" if goal_report.reached else "unresolved"
+           lines.append(
+               f"Goal status: {status} "
+               f"(confidence {goal_report.confidence:.2f} / threshold {goal_report.threshold:.2f})"
+           )
+           lines.append(f"Reason: {goal_report.reason}")
+       overview = self._compose_overview(goal_report)
+       if overview:
+           lines.append("")
+           lines.append("Overview:")
+           lines.append(overview)
+       lines.append("")
+       lines.append("Steps:")
+       if not self._entries:
+           lines.append("  No screenshots were captured for this run.")
+       else:
+           for entry in self._entries:
+               lines.append(f"  Step {entry.step_index}: {entry.screenshot_path.name}")
+               lines.append(f"    {entry.sentence}")
+               lines.append(f"    Captured at: {entry.timestamp.isoformat()}")
+               lines.append("")
+
+       content = "\n".join(lines).rstrip() + "\n"
+       self._steps_file.write_text(content, encoding="utf-8")
+
+   def _compose_overview(self, goal_report: Optional[GoalCheckReport]) -> str:
+       if not self._goal:
+           goal_text = "the requested task"
+       else:
+           goal_text = f"how to {self._goal}"
+       base = f"Agent B showed Agent A {goal_text}"
+       if self._provider:
+           base += f" in {self._provider}"
+       base = base.rstrip() + "."
+
+       if not self._entries:
+           status_clause = (
+               " No annotated steps were captured, so refer to the live session logs for details."
+           )
+           if goal_report and not goal_report.reached:
+               status_clause = (
+                   f" The goal remains unresolved because {goal_report.reason}."
+               ) + status_clause
+           return base + status_clause
+
+       def clause(sentence: str) -> str:
+           text = sentence.strip().rstrip(".")
+           lowered = text.lower()
+           prefix = "agent b "
+           if lowered.startswith(prefix):
+               text = text[len(prefix):]
+           return text
+
+       first_clause = clause(self._entries[0].sentence)
+       last_clause = clause(self._entries[-1].sentence)
+       middle_clause = ""
+       if len(self._entries) > 2:
+           middle_clause = clause(self._entries[len(self._entries) // 2].sentence)
+
+       narrative_parts: List[str] = []
+       if len(self._entries) == 1:
+           narrative_parts.append(f"It accomplished this by {first_clause}.")
+       elif len(self._entries) == 2:
+           narrative_parts.append(f"It started by {first_clause} and finished when it {last_clause}.")
+       else:
+           narrative_parts.append(f"It started by {first_clause}.")
+           if middle_clause:
+               narrative_parts.append(f"Then it {middle_clause}.")
+           narrative_parts.append(f"Finally, it {last_clause}.")
+
+       if goal_report:
+           if goal_report.reached:
+               narrative_parts.append(f"The goal was confirmed because {goal_report.reason}.")
+           else:
+               narrative_parts.append(f"The goal remains unresolved because {goal_report.reason}.")
+
+       return " ".join([base] + narrative_parts)
+
+   def _reset(self) -> None:
+       self._entries.clear()
+       self._goal = ""
+       self._provider = ""
+       self._run_slug = ""
+       self._run_dir = None
+       self._steps_file = None
+       self._start_time = None
+       self._active = False
+       self._step_counter = 0
+
+
 #GLOBAL CONSTANTS 
 
 PROFILES_ROOT = Path("profiles")
@@ -191,6 +375,7 @@ SUCCESS_TERMS = [
 TOAST_HINT_TERMS = ["toast", "notification", "banner", "alert", "snackbar"]
 CONTEXT_MEMORY_CAPACITY = 30
 INTERACTION_CONTEXT = InteractionContextMemory(capacity=CONTEXT_MEMORY_CAPACITY)
+RUN_CAPTURE_LOG = RunCaptureLog(SCREENSHOT_OUTPUT_DIR)
 
 
 def reset_interaction_context_memory() -> None:
@@ -232,6 +417,77 @@ def _format_context_observation(
    return " | ".join(parts)
 
 
+def _sanitize_run_log_fragment(value: Optional[str]) -> str:
+   if not value:
+       return ""
+   fragment = " ".join(str(value).split())
+   return fragment.strip()
+
+
+def _format_run_log_label(label: Optional[str]) -> str:
+   clean = _sanitize_run_log_fragment(label)
+   if not clean:
+       return "the target control"
+   return f'"{clean}"'
+
+
+def _shorten_value(text: Optional[str], limit: int = 60) -> str:
+   fragment = _sanitize_run_log_fragment(text)
+   if len(fragment) <= limit:
+       return fragment
+   return f"{fragment[: limit - 3]}..."
+
+
+def _describe_step_for_run_log(
+   action_kind: str,
+   label: str,
+   typed_text: Optional[str],
+   success: bool,
+   message: str,
+) -> str:
+   label_desc = _format_run_log_label(label)
+   action_kind = (action_kind or "").strip().lower()
+   outcome_note = _sanitize_run_log_fragment(message)
+   if action_kind == "type":
+       value = _shorten_value(typed_text or "")
+       if value:
+           action_phrase = f'entered "{value}" into {label_desc}'
+       else:
+           action_phrase = f"typed into {label_desc}"
+   elif action_kind == "click":
+       action_phrase = f"clicked {label_desc}"
+   else:
+       action_phrase = f"performed '{action_kind}' on {label_desc}"
+
+   if success:
+       if outcome_note:
+           result_phrase = f"and it worked ({outcome_note})"
+       else:
+           result_phrase = "and it worked"
+   else:
+       if outcome_note:
+           result_phrase = f"but it failed ({outcome_note})"
+       else:
+           result_phrase = "but it failed"
+   sentence = f"Agent B {action_phrase} {result_phrase}."
+   return " ".join(sentence.split())
+
+
+def _describe_run_completion(goal: str, report: Optional[GoalCheckReport]) -> str:
+   goal_text = _sanitize_run_log_fragment(goal) or "the task"
+   if report:
+       reason = _sanitize_run_log_fragment(report.reason) or "the UI provided confirmation"
+       if report.reached:
+           return (
+               f'Agent B saved the final confirmation after completing "{goal_text}" '
+               f"because {reason}."
+           )
+       return (
+           f'Agent B captured a final reference state even though "{goal_text}" '
+           f"remains unresolved because {reason}."
+       )
+   return f'Agent B captured the final UI state for "{goal_text}" to brief Agent A.'
+
 def _record_interaction_context(
    *,
    action_kind: str,
@@ -243,6 +499,7 @@ def _record_interaction_context(
    progress_reason: str,
    updated_state: Optional[Dict[str, Any]],
    fallback_state: Optional[Dict[str, Any]],
+   screenshot_path: Optional[str] = None,
 ) -> None:
    selector_desc = _format_context_selector(action_kind, label, typed_text)
    observation = _format_context_observation(success, message, progress, progress_reason)
@@ -252,13 +509,22 @@ def _record_interaction_context(
            dom_snapshot = state.get("dom_snippet") or state.get("dom_excerpt") or ""
            if dom_snapshot:
                break
-   INTERACTION_CONTEXT.record(
+   entry = INTERACTION_CONTEXT.record(
        action=action_kind,
        selector=selector_desc,
        observation=observation,
        success=success,
        dom_snapshot=dom_snapshot,
    )
+   if screenshot_path:
+       run_sentence = _describe_step_for_run_log(
+           action_kind=action_kind,
+           label=label,
+           typed_text=typed_text,
+           success=success,
+           message=message,
+       )
+       RUN_CAPTURE_LOG.record_step(run_sentence, screenshot_path, entry.timestamp)
 
 
 def _format_page_state_summary(page_state: Optional[Dict[str, Any]]) -> str:
@@ -693,7 +959,7 @@ def _clear_highlight(locator) -> None:
    except Exception:
        pass
 
-
+#allow the rest of the system to know what the screenshot means 
 def _capture_action_screenshot(page, label: str, action: str = "click") -> Optional[str]:
    global ACTION_SNAPSHOT_COUNTER
    try:
@@ -1230,7 +1496,7 @@ def _attempt_click(
    label: str,
    hints: Optional[List[str]] = None,
    page_state: Optional[Dict[str, Any]] = None,
-) -> tuple[bool, str]:
+) -> tuple[bool, str, Optional[str]]:
    """
    Attempt to click a label using generated locator strategies.
    Returns (success, message).
@@ -1240,12 +1506,13 @@ def _attempt_click(
        return False, "No locator strategies generated."
 
    last_error = "No matching elements located."
+   captured_screenshot: Optional[str] = None
    if page_state and page_state.get("dropdown_open"):
        hint_set = {hint.lower() for hint in (hints or [])}
        dropdown_exact = "fuzzy" not in hint_set
        success, dropdown_msg = _attempt_dropdown_click(page, label, exact=dropdown_exact)
        if success:
-           return True, dropdown_msg
+           return True, dropdown_msg, captured_screenshot
        last_error = dropdown_msg
 
    for desc, builder in options:
@@ -1266,9 +1533,10 @@ def _attempt_click(
                        pass
                screenshot_path = _capture_action_screenshot(page, label, action="click")
                if screenshot_path:
+                   captured_screenshot = screenshot_path
                    print(f"    📸 Highlight screenshot saved: {screenshot_path}")
                target.click(timeout=10000)
-               return True, f"Clicked via {desc}"
+               return True, f"Clicked via {desc}", captured_screenshot
            except Exception as exc:
                last_error = str(exc)
            finally:
@@ -1276,7 +1544,7 @@ def _attempt_click(
                    _clear_highlight(target)
        except Exception as exc:
            last_error = str(exc)
-   return False, f"All strategies failed. Last error: {last_error}"
+   return False, f"All strategies failed. Last error: {last_error}", captured_screenshot
 
 
 
@@ -1975,6 +2243,7 @@ def main() -> None:
    print(f"🎯 Goal: {goal}")
 
    goal_confidence_threshold = _resolve_goal_confidence_threshold(goal)
+   latest_goal_report: Optional[GoalCheckReport] = None
 
    try:
        provider, action = parse_intent(goal)
@@ -1984,225 +2253,233 @@ def main() -> None:
 
 
    print(f"🤖 Resolved intent → provider='{provider}', action='{action}'")
+   RUN_CAPTURE_LOG.start(goal, provider)
    try:
-       config = resolve_integration_config(goal, provider, action)
-   except RuntimeError as exc:
-       print(f"❌ {exc}")
-       return
-
-
-   headless = _resolve_headless_preference(config.launch_kwargs.get("headless", False))
-   global CURRENT_HOME_URL
-   CURRENT_HOME_URL = config.base_url
-
-
-   playwright = None
-   context = None
-   page = None
-   try:
-       playwright, context, page = launch_persistent(config.base_url, config.profile_dir, headless=headless)
-
        try:
-           page.wait_for_load_state("networkidle", timeout=10000)
-       except PWTimeoutError:
-           pass
+           config = resolve_integration_config(goal, provider, action)
+       except RuntimeError as exc:
+           print(f"❌ {exc}")
+           return
 
-       runtime_config = replace(config)
+
+       headless = _resolve_headless_preference(config.launch_kwargs.get("headless", False))
+       global CURRENT_HOME_URL
+       CURRENT_HOME_URL = config.base_url
+
+
+       playwright = None
+       context = None
+       page = None
        try:
-           preloop_state: Optional[Dict[str, Any]] = _summarize_page_state(page)
-       except Exception:
-           preloop_state = None
-       dynamic_hints = _discover_control_hints(
-           page, goal, provider, action, page_state=preloop_state
-       )
-       if dynamic_hints:
-           runtime_config.label_hints = dynamic_hints
-           print(f"🧠 Discovered control hints: {dynamic_hints}")
-       else:
-           runtime_config.label_hints = list(config.label_hints)
-           if runtime_config.label_hints:
-               print(f"🧠 Using fallback control hints: {runtime_config.label_hints}")
+           playwright, context, page = launch_persistent(config.base_url, config.profile_dir, headless=headless)
 
-
-       reset_interaction_context_memory()
-       history: List[ActionRecord] = []
-       latest_goal_report: Optional[GoalCheckReport] = None
-       for step_idx in range(1, MAX_ACTIONS + 1):
            try:
-               page_state = _summarize_page_state(page)
-               dom_snapshot = page_state.get("dom_snippet") or get_latest_dom_snapshot()
-               context_sentences = get_recent_context_sentences(limit=6)
-               latest_goal_report = _evaluate_goal_state(
-                   goal,
-                   page_state,
-                   dom_snapshot=dom_snapshot,
-                   context_sentences=context_sentences,
-                   threshold=goal_confidence_threshold,
-               )
-               _log_goal_report(latest_goal_report, force=latest_goal_report.reached)
-               if latest_goal_report.reached:
-                   print(f"🏁 Goal checker declared success: {latest_goal_report.reason}")
-                   break
+               page.wait_for_load_state("networkidle", timeout=10000)
+           except PWTimeoutError:
+               pass
 
-               plan = _plan_next_action(page, goal, action, runtime_config, history, page_state=page_state)
-           except RuntimeError as exc:
-               print(f"❌ Planner failure: {exc}")
-               break
-
-
-           if plan.get("finish"):
-               if latest_goal_report and latest_goal_report.reached:
-                   print(f"🎉 Planner agrees with goal checker: {plan.get('reason', 'done')}")
-                   break
-               print("⚠️ Planner marked goal complete, but goal checker still uncertain. Continuing…")
+           runtime_config = replace(config)
+           try:
+               preloop_state: Optional[Dict[str, Any]] = _summarize_page_state(page)
+           except Exception:
+               preloop_state = None
+           dynamic_hints = _discover_control_hints(
+               page, goal, provider, action, page_state=preloop_state
+           )
+           if dynamic_hints:
+               runtime_config.label_hints = dynamic_hints
+               print(f"🧠 Discovered control hints: {dynamic_hints}")
+           else:
+               runtime_config.label_hints = list(config.label_hints)
+               if runtime_config.label_hints:
+                   print(f"🧠 Using fallback control hints: {runtime_config.label_hints}")
 
 
-           targets = plan.get("targets") or []
-           if not targets:
-               print(f"❌ Planner returned no targets on iteration {step_idx}.")
-               break
-
-
-           print(f"🧭 Iteration {step_idx}: {plan.get('reason', 'No reason provided.')}")
-
-
-           executed = False
-           for target in targets:
-               action_kind_raw = target.get("action") or "click"
-               action_kind = action_kind_raw.strip().lower()
-               if action_kind not in {"click", "type"}:
-                   print(f"  • Unsupported action '{action_kind_raw}', skipping.")
-                   continue
-
-
-               label_variants_raw = target.get("label_variants") or []
-               if isinstance(label_variants_raw, str):
-                   label_variants = [label_variants_raw]
-               else:
-                   label_variants = [str(item) for item in label_variants_raw if isinstance(item, str)]
-               if not label_variants:
-                   print("  • Planner target missing label variants; skipping.")
-                   continue
-
-
-               locator_hints_raw = target.get("locator_hints") or []
-               if isinstance(locator_hints_raw, str):
-                   locator_hints = [locator_hints_raw]
-               else:
-                   locator_hints = [str(item) for item in locator_hints_raw if isinstance(item, str)]
-               notes = target.get("notes")
-               if notes:
-                   print(f"    ↳ Planner note: {notes}")
-
-               type_text_value: Optional[str] = None
-               type_press_enter = False
-               type_clear_first = True
-               if action_kind == "type":
-                   raw_text_value = target.get("text", target.get("value"))
-                   if raw_text_value is None:
-                       print("  • Type target missing 'text'; skipping.")
-                       continue
-                   type_text_value = str(raw_text_value)
-                   if isinstance(target.get("press_enter"), bool):
-                       type_press_enter = bool(target["press_enter"])
-                   if isinstance(target.get("clear_first"), bool):
-                       type_clear_first = bool(target["clear_first"])
-
-               for label in label_variants:
-                   if action_kind == "click":
-                       success, message = _attempt_click(
-                           page, label, locator_hints, page_state=page_state
-                       )
-                   else:
-                       success, message = _attempt_type(
-                           page,
-                           label,
-                           type_text_value or "",
-                           locator_hints,
-                           clear_first=type_clear_first,
-                           press_enter=type_press_enter,
-                       )
-                   updated_state, progress, progress_reason = _capture_page_state_with_retries(
-                       page,
-                       baseline_state=page_state,
-                       dom_limit=12000,
-                       excerpt_limit=1200,
+           reset_interaction_context_memory()
+           history: List[ActionRecord] = []
+           latest_goal_report = None
+           for step_idx in range(1, MAX_ACTIONS + 1):
+               try:
+                   page_state = _summarize_page_state(page)
+                   dom_snapshot = page_state.get("dom_snippet") or get_latest_dom_snapshot()
+                   context_sentences = get_recent_context_sentences(limit=6)
+                   latest_goal_report = _evaluate_goal_state(
+                       goal,
+                       page_state,
+                       dom_snapshot=dom_snapshot,
+                       context_sentences=context_sentences,
+                       threshold=goal_confidence_threshold,
                    )
-                   if success and not progress:
-                       success = False
-                       message = f"No observable change: {progress_reason}"
-
-                   state_snapshot: Dict[str, Any] = {}
-                   if not success:
-                       state_snapshot = updated_state or {}
-
-                   history_label = f"{action_kind}:{label}" if action_kind != "click" else label
-                   history.append(
-                       ActionRecord(
-                           label=history_label,
-                           success=success,
-                           message=message,
-                           state=state_snapshot,
-                       )
-                   )
-
-                   _record_interaction_context(
-                       action_kind=action_kind,
-                       label=label,
-                       typed_text=type_text_value if action_kind == "type" else None,
-                       success=success,
-                       message=message,
-                       progress=progress,
-                       progress_reason=progress_reason,
-                       updated_state=updated_state,
-                       fallback_state=page_state,
-                   )
-
-                   outcome_icon = "✅" if success else "⚠️"
-                   print(f"    {outcome_icon} Tried '{label}' → {message}")
-
-                   if success:
-                       page_state = updated_state or page_state
-                       if label not in runtime_config.label_hints:
-                           runtime_config.label_hints.append(label)
-                       executed = True
-                       try:
-                           page.wait_for_timeout(800)
-                       except Exception:
-                           pass
+                   _log_goal_report(latest_goal_report, force=latest_goal_report.reached)
+                   if latest_goal_report.reached:
+                       print(f"🏁 Goal checker declared success: {latest_goal_report.reason}")
                        break
 
-                   page_state = updated_state or page_state
-
-
-               if executed:
+                   plan = _plan_next_action(page, goal, action, runtime_config, history, page_state=page_state)
+               except RuntimeError as exc:
+                   print(f"❌ Planner failure: {exc}")
                    break
 
 
-           if not executed:
-               print("  • All planner suggestions failed; requesting a new plan…")
-               continue
+               if plan.get("finish"):
+                   if latest_goal_report and latest_goal_report.reached:
+                       print(f"🎉 Planner agrees with goal checker: {plan.get('reason', 'done')}")
+                       break
+                   print("⚠️ Planner marked goal complete, but goal checker still uncertain. Continuing…")
 
 
-       else:
-           print("⚠️ Reached maximum iterations without planner finishing the task.")
+               targets = plan.get("targets") or []
+               if not targets:
+                   print(f"❌ Planner returned no targets on iteration {step_idx}.")
+                   break
 
 
-       try:
-           page.wait_for_load_state("networkidle", timeout=5000)
-       except PWTimeoutError:
-           pass
+               print(f"🧭 Iteration {step_idx}: {plan.get('reason', 'No reason provided.')}")
 
 
-       screenshot_path = _build_screenshot_path(goal, provider)
-       page.screenshot(path=screenshot_path, full_page=True)
-       print(f"📸 Screenshot saved: {screenshot_path}")
+               executed = False
+               for target in targets:
+                   action_kind_raw = target.get("action") or "click"
+                   action_kind = action_kind_raw.strip().lower()
+                   if action_kind not in {"click", "type"}:
+                       print(f"  • Unsupported action '{action_kind_raw}', skipping.")
+                       continue
 
 
-       input("✅ Done. Inspect the page, then press Enter to close the browser…")
+                   label_variants_raw = target.get("label_variants") or []
+                   if isinstance(label_variants_raw, str):
+                       label_variants = [label_variants_raw]
+                   else:
+                       label_variants = [str(item) for item in label_variants_raw if isinstance(item, str)]
+                   if not label_variants:
+                       print("  • Planner target missing label variants; skipping.")
+                       continue
+
+
+                   locator_hints_raw = target.get("locator_hints") or []
+                   if isinstance(locator_hints_raw, str):
+                       locator_hints = [locator_hints_raw]
+                   else:
+                       locator_hints = [str(item) for item in locator_hints_raw if isinstance(item, str)]
+                   notes = target.get("notes")
+                   if notes:
+                       print(f"    ↳ Planner note: {notes}")
+
+                   type_text_value: Optional[str] = None
+                   type_press_enter = False
+                   type_clear_first = True
+                   if action_kind == "type":
+                       raw_text_value = target.get("text", target.get("value"))
+                       if raw_text_value is None:
+                           print("  • Type target missing 'text'; skipping.")
+                           continue
+                       type_text_value = str(raw_text_value)
+                       if isinstance(target.get("press_enter"), bool):
+                           type_press_enter = bool(target["press_enter"])
+                       if isinstance(target.get("clear_first"), bool):
+                           type_clear_first = bool(target["clear_first"])
+
+                   for label in label_variants:
+                       screenshot_path: Optional[str] = None
+                       if action_kind == "click":
+                           success, message, screenshot_path = _attempt_click(
+                               page, label, locator_hints, page_state=page_state
+                           )
+                       else:
+                           success, message = _attempt_type(
+                               page,
+                               label,
+                               type_text_value or "",
+                               locator_hints,
+                               clear_first=type_clear_first,
+                               press_enter=type_press_enter,
+                           )
+                       updated_state, progress, progress_reason = _capture_page_state_with_retries(
+                           page,
+                           baseline_state=page_state,
+                           dom_limit=12000,
+                           excerpt_limit=1200,
+                       )
+                       if success and not progress:
+                           success = False
+                           message = f"No observable change: {progress_reason}"
+
+                       state_snapshot: Dict[str, Any] = {}
+                       if not success:
+                           state_snapshot = updated_state or {}
+
+                       history_label = f"{action_kind}:{label}" if action_kind != "click" else label
+                       history.append(
+                           ActionRecord(
+                               label=history_label,
+                               success=success,
+                               message=message,
+                               state=state_snapshot,
+                           )
+                       )
+
+                       _record_interaction_context(
+                           action_kind=action_kind,
+                           label=label,
+                           typed_text=type_text_value if action_kind == "type" else None,
+                           success=success,
+                           message=message,
+                           progress=progress,
+                           progress_reason=progress_reason,
+                           updated_state=updated_state,
+                           fallback_state=page_state,
+                           screenshot_path=screenshot_path if action_kind == "click" else None,
+                       )
+
+                       outcome_icon = "✅" if success else "⚠️"
+                       print(f"    {outcome_icon} Tried '{label}' → {message}")
+
+                       if success:
+                           page_state = updated_state or page_state
+                           if label not in runtime_config.label_hints:
+                               runtime_config.label_hints.append(label)
+                           executed = True
+                           try:
+                               page.wait_for_timeout(800)
+                           except Exception:
+                               pass
+                           break
+
+                       page_state = updated_state or page_state
+
+
+                   if executed:
+                       break
+
+
+               if not executed:
+                   print("  • All planner suggestions failed; requesting a new plan…")
+                   continue
+
+
+           else:
+               print("⚠️ Reached maximum iterations without planner finishing the task.")
+
+
+           try:
+               page.wait_for_load_state("networkidle", timeout=5000)
+           except PWTimeoutError:
+               pass
+
+
+           screenshot_path = _build_screenshot_path(goal, provider)
+           page.screenshot(path=screenshot_path, full_page=True)
+           print(f"📸 Screenshot saved: {screenshot_path}")
+           final_summary = _describe_run_completion(goal, latest_goal_report)
+           RUN_CAPTURE_LOG.record_summary(final_summary, screenshot_path)
+
+
+           input("✅ Done. Inspect the page, then press Enter to close the browser…")
+       finally:
+           CURRENT_HOME_URL = None
+           shutdown_persistent(playwright, context)
    finally:
-       CURRENT_HOME_URL = None
-       shutdown_persistent(playwright, context)
+       RUN_CAPTURE_LOG.finalize(latest_goal_report)
 
 
 
