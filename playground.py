@@ -17,24 +17,8 @@ from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from bots._profile_launch import launch_persistent, shutdown as shutdown_persistent
 
-
-PROFILES_ROOT = Path("profiles")
-GENERATED_CONFIG_PATH = Path("generated_integrations.json")
-SCREENSHOT_OUTPUT_DIR = Path("state_captures")
-CURRENT_HOME_URL: Optional[str] = None
-OVERLAY_LOCATORS = [
-   ("role[dialog]", lambda page: page.locator("[role='dialog']")),
-   ("aria-modal", lambda page: page.locator("[aria-modal='true']")),
-   ("role[menu]", lambda page: page.locator("[role='menu']")),
-   ("role[listbox]", lambda page: page.locator("[role='listbox']")),
-]
-
-
-client = OpenAI()
-DEFAULT_GOAL = "change the language in notion to french"
-MAX_ACTIONS = 12
-
-
+# log enteries for each attempted action. 
+# used to show the planner what happened. also called during fallback to know what works and didnt. 
 @dataclass
 class ActionRecord:
    label: str
@@ -42,6 +26,603 @@ class ActionRecord:
    message: str
    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
    state: Dict[str, Any] = field(default_factory=dict)
+
+#better context used in the action log. 
+@dataclass
+class ContextEntry:
+   action: str
+   selector: str
+   observation: str
+   success: Optional[bool] = None
+   timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+   #this turns the things that happened into a one liner for the LLM. 
+   def sentence(self) -> str:
+       if self.success is None: #choosing status 
+           status = "observed" 
+       else:
+           status = "succeeded" if self.success else "failed"
+       selector = self.selector.strip() if self.selector else ""
+       action_phrase = self.action.strip()
+       if action_phrase and selector:
+           descriptor = f"{action_phrase} {selector}"
+       elif action_phrase:
+           descriptor = action_phrase
+       elif selector:
+           descriptor = selector
+       else:
+           descriptor = "interaction"
+       sentence = f"{descriptor} {status}".strip()
+       observation = self.observation.strip()
+       if observation:
+           sentence = f"{sentence}: {observation}"
+       return sentence
+
+    #checks to see if the previous action did the same thing as the current action. this is so we dont spam the LLM with the same message.
+   def fingerprint(self) -> str:
+       return "|".join(
+           [
+               (self.action or "").strip(),
+               (self.selector or "").strip(),
+               (self.observation or "").strip(),
+               "1" if self.success else "0" if self.success is False else "",
+           ]
+       )
+
+#takes in recent actions and dom
+class InteractionContextMemory:
+   def __init__(self, capacity: int = 30):
+       self.capacity = capacity
+       self._entries: List[ContextEntry] = []
+       self._latest_dom_snapshot: str = ""
+       self._latest_dom_timestamp: Optional[datetime] = None
+
+    #clears memory
+   def clear(self) -> None:
+       self._entries.clear()
+       self._latest_dom_snapshot = ""
+       self._latest_dom_timestamp = None
+
+   def record(
+       self,
+       *,
+       action: str,
+       selector: str,
+       observation: str,
+       success: Optional[bool],
+       dom_snapshot: Optional[str],
+   ) -> None:
+       entry = ContextEntry(
+           action=action.strip(),
+           selector=selector.strip(),
+           observation=self._sanitize_text(observation),
+           success=success,
+       )
+       if self._entries and self._entries[-1].fingerprint() == entry.fingerprint():
+           # Update timestamp to reflect latest occurrence but avoid duplicate text.
+           self._entries[-1].timestamp = entry.timestamp
+       else:
+           self._entries.append(entry)
+           if len(self._entries) > self.capacity:
+               self._entries.pop(0)
+
+       snapshot = self._sanitize_dom(dom_snapshot)
+       if snapshot:
+           self._latest_dom_snapshot = snapshot
+           self._latest_dom_timestamp = entry.timestamp
+
+    #return the last sentence for the hollistic goal checker
+   def recent_sentences(self, limit: int = 6) -> List[str]:
+       if limit <= 0:
+           return []
+       return [entry.sentence() for entry in self._entries[-limit:]]
+
+ 
+   def latest_dom_snapshot(self) -> str:
+       return self._latest_dom_snapshot
+
+   @staticmethod
+   def _sanitize_text(value: Optional[str]) -> str:
+       if not value:
+           return ""
+       return " ".join(str(value).split())
+
+   @staticmethod
+   def _sanitize_dom(value: Optional[str]) -> str:
+       if not value:
+           return ""
+       return value.strip()
+
+#### goal checking #### 
+
+@dataclass
+class CheckerResult:
+    name: str
+    passed: bool #did we pass or not
+    confidence: float # 0-1 value 
+    evidence: List[str] = field(default_factory=list)
+    error: Optional[str] = None
+
+#generate a summary
+@dataclass
+class GoalCheckReport:
+    reached: bool
+    confidence: float
+    threshold: float
+    reason: str
+    results: List[CheckerResult] = field(default_factory=list)
+
+
+#GLOBAL CONSTANTS 
+
+PROFILES_ROOT = Path("profiles")
+GENERATED_CONFIG_PATH = Path("generated_integrations.json")
+SCREENSHOT_OUTPUT_DIR = Path("state_captures")
+CURRENT_HOME_URL: Optional[str] = None
+
+#finding overlays for menus and what not
+OVERLAY_LOCATORS = [
+   ("role[dialog]", lambda page: page.locator("[role='dialog']")),
+   ("aria-modal", lambda page: page.locator("[aria-modal='true']")),
+   ("role[menu]", lambda page: page.locator("[role='menu']")),
+   ("role[listbox]", lambda page: page.locator("[role='listbox']")),
+]
+
+client = OpenAI()
+DEFAULT_GOAL = "change the language to french in notion"  #EDIT THIS WHEN TESTING AND WHAT NOT
+DEFAULT_GOAL = "change the language in notion to french"
+MAX_ACTIONS = 12
+ACTION_SNAPSHOT_COUNTER = 0
+HIGHLIGHT_BORDER_COLOR = "#ff9800"
+DEFAULT_GOAL_CONFIDENCE = 0.65
+GOAL_DEBUG = os.environ.get("PLAYGROUND_GOAL_DEBUG", "").strip().lower() in {"1", "true", "yes", "debug"}
+SUCCESS_TERMS = [
+   "created",
+   "added",
+   "saved",
+   "success",
+   "completed",
+   "done",
+   "ready",
+   "submitted",
+   "opened",
+]
+TOAST_HINT_TERMS = ["toast", "notification", "banner", "alert", "snackbar"]
+CONTEXT_MEMORY_CAPACITY = 30
+INTERACTION_CONTEXT = InteractionContextMemory(capacity=CONTEXT_MEMORY_CAPACITY)
+
+
+def reset_interaction_context_memory() -> None:
+   INTERACTION_CONTEXT.clear()
+
+
+def get_recent_context_sentences(limit: int = 6) -> List[str]:
+   return INTERACTION_CONTEXT.recent_sentences(limit)
+
+
+def get_latest_dom_snapshot() -> str:
+   return INTERACTION_CONTEXT.latest_dom_snapshot()
+
+
+def _format_context_selector(action_kind: str, label: str, typed_text: Optional[str]) -> str:
+   label = (label or "").strip()
+   if action_kind == "type" and typed_text is not None:
+       value = typed_text.strip()
+       if len(value) > 48:
+           value = f"{value[:45]}..."
+       if label:
+           return f"{label} ← \"{value}\""
+       return f"text ← \"{value}\""
+   return label or "(unnamed target)"
+
+
+def _format_context_observation(
+   success: bool, message: str, progress: bool, progress_reason: str
+) -> str:
+   status = "succeeded" if success else "failed"
+   parts: List[str] = [status]
+   if message:
+       parts.append(message.strip())
+   if progress_reason:
+       change = progress_reason.strip()
+       if not progress:
+           change = f"no change ({change})"
+       parts.append(f"UI: {change}")
+   return " | ".join(parts)
+
+
+def _record_interaction_context(
+   *,
+   action_kind: str,
+   label: str,
+   typed_text: Optional[str],
+   success: bool,
+   message: str,
+   progress: bool,
+   progress_reason: str,
+   updated_state: Optional[Dict[str, Any]],
+   fallback_state: Optional[Dict[str, Any]],
+) -> None:
+   selector_desc = _format_context_selector(action_kind, label, typed_text)
+   observation = _format_context_observation(success, message, progress, progress_reason)
+   dom_snapshot = ""
+   for state in (updated_state, fallback_state):
+       if isinstance(state, dict):
+           dom_snapshot = state.get("dom_snippet") or state.get("dom_excerpt") or ""
+           if dom_snapshot:
+               break
+   INTERACTION_CONTEXT.record(
+       action=action_kind,
+       selector=selector_desc,
+       observation=observation,
+       success=success,
+       dom_snapshot=dom_snapshot,
+   )
+
+
+def _format_page_state_summary(page_state: Optional[Dict[str, Any]]) -> str:
+    if not page_state:
+        return "Unavailable."
+
+    parts: List[str] = []
+
+    url = page_state.get("url")
+    title = page_state.get("title")
+    overlay = page_state.get("overlay_visible")
+    dashboard_hint = page_state.get("dashboard_hint")
+    dropdown_open = page_state.get("dropdown_open")
+
+    if url:
+        parts.append(f"URL: {url}")
+    if title:
+        parts.append(f"Title: {title}")
+    if overlay is not None:
+        parts.append(f"Overlay visible: {overlay}")
+    if dashboard_hint:
+        parts.append(f"Dashboard hint: {dashboard_hint}")
+    if dropdown_open is not None:
+        parts.append(f"Dropdown open: {dropdown_open}")
+
+    headings = page_state.get("visible_headings") or []
+    if headings:
+        parts.append(f"Headings: {', '.join(headings[:5])}")
+
+    buttons = page_state.get("visible_buttons") or []
+    if buttons:
+        parts.append(f"Buttons: {', '.join(buttons[:6])}")
+
+    open_dialogs = page_state.get("open_dialogs") or []
+    if open_dialogs:
+        parts.append(f"Dialogs: {', '.join(open_dialogs[:3])}")
+
+    menu_options = page_state.get("menu_options") or []
+    if menu_options:
+        parts.append(f"Menu options: {', '.join(menu_options[:6])}")
+
+    state_summary = page_state.get("dom_excerpt") or ""
+    if state_summary:
+        snippet = _normalize_whitespace(state_summary[:500])
+        parts.append(f"DOM excerpt: {snippet}")
+
+    return "\n".join(parts) if parts else "No structured state captured."
+
+
+def _derive_goal_keywords(goal: str, limit: int = 4) -> List[str]:
+    tokens = [tok for tok in re.split(r"[^a-z0-9]+", goal.lower()) if tok]
+    stopwords = {
+        "create",
+        "make",
+        "new",
+        "a",
+        "the",
+        "please",
+        "goal",
+        "task",
+        "to",
+        "and",
+        "in",
+        "for",
+        "with",
+        "bot",
+        "teach",
+        "user",
+    }
+    keywords: List[str] = []
+    for tok in tokens:
+        if tok in stopwords:
+            continue
+        keywords.append(tok)
+        if len(keywords) >= limit:
+            break
+    if not keywords and tokens:
+        keywords = tokens[:limit]
+    return keywords or ["goal"]
+
+
+def _strip_html_tags(value: str) -> str:
+    return re.sub(r"<[^>]+>", " ", value)
+
+
+def _normalize_whitespace(value: str) -> str:
+    return " ".join(value.split())
+
+
+def _plain_dom_text(dom_snapshot: Optional[str], limit: int = 18000) -> str:
+    if not dom_snapshot:
+        return ""
+    stripped = _strip_html_tags(dom_snapshot)
+    normalized = _normalize_whitespace(stripped)
+    return normalized[:limit]
+
+
+def _detect_success_text(dom_text: str, keywords: List[str]) -> List[str]:
+    if not dom_text:
+        return []
+    dom_lower = dom_text.lower()
+    matches: List[str] = []
+    for kw in keywords:
+        for term in SUCCESS_TERMS:
+            pattern = re.compile(rf"{kw}.{{0,40}}{term}|{term}.{{0,40}}{kw}", re.IGNORECASE)
+            if pattern.search(dom_lower):
+                matches.append(f"{kw} ~ {term}")
+                break
+    return matches
+
+
+def _detect_toast_mentions(dom_snapshot: str, keywords: List[str]) -> Optional[str]:
+    if not dom_snapshot:
+        return None
+    dom_lower = dom_snapshot.lower()
+    if not any(hint in dom_lower for hint in TOAST_HINT_TERMS):
+        return None
+    for term in SUCCESS_TERMS:
+        if term in dom_lower:
+            return f"Toast/banner references '{term}'"
+    if keywords:
+        for kw in keywords:
+            if kw in dom_lower:
+                return f"Toast/banner references '{kw}'"
+    return None
+
+
+def _detect_goal_url(current_url: str, keywords: List[str]) -> Optional[str]:
+    if not current_url:
+        return None
+    url_lower = current_url.lower()
+    for kw in keywords:
+        if not kw:
+            continue
+        plural = f"{kw}s"
+        if f"/{kw}" in url_lower or f"/{plural}" in url_lower:
+            return f"URL path includes '{kw}'"
+    return None
+
+
+def _detect_heading_success(page_state: Dict[str, Any], keywords: List[str]) -> Optional[str]:
+    headings = page_state.get("visible_headings") or []
+    for heading in headings:
+        heading_lower = heading.lower()
+        if any(kw in heading_lower for kw in keywords) and any(term in heading_lower for term in SUCCESS_TERMS):
+            return f"Heading indicates completion: '{heading.strip()}'"
+    return None
+
+
+def _detect_form_closed(page_state: Dict[str, Any]) -> Optional[str]:
+    if not page_state:
+        return None
+    if not page_state.get("overlay_visible") and not page_state.get("dropdown_open"):
+        return "No modal overlays open"
+    return None
+
+
+def _run_rule_goal_checker(page_state: Optional[Dict[str, Any]], keywords: List[str]) -> CheckerResult:
+    if not page_state:
+        return CheckerResult(
+            name="rule",
+            passed=False,
+            confidence=0.0,
+            evidence=[],
+            error="Missing page state",
+        )
+
+    dom_snapshot = page_state.get("dom_snippet") or ""
+    dom_text = _plain_dom_text(dom_snapshot)
+    evidence: List[str] = []
+    score = 0.0
+
+    text_hits = _detect_success_text(dom_text, keywords)
+    if text_hits:
+        evidence.append(f"Success text: {', '.join(text_hits[:3])}")
+        score += 1.0
+
+    toast_hit = _detect_toast_mentions(dom_snapshot, keywords)
+    if toast_hit:
+        evidence.append(toast_hit)
+        score += 0.5
+
+    heading_hit = _detect_heading_success(page_state, keywords)
+    if heading_hit:
+        evidence.append(heading_hit)
+        score += 0.4
+
+    url_hit = _detect_goal_url(page_state.get("url", ""), keywords)
+    if url_hit:
+        evidence.append(url_hit)
+        score += 0.35
+
+    form_hint = _detect_form_closed(page_state)
+    if form_hint:
+        evidence.append(form_hint)
+        score += 0.25
+
+    passed = score >= 1.0 and bool(evidence)
+    confidence = 0.0
+    if passed:
+        confidence = min(0.2 + 0.3 * score, 0.9)
+    elif score > 0:
+        confidence = min(0.15 + 0.15 * score, 0.35)
+    return CheckerResult(
+        name="rule",
+        passed=passed,
+        confidence=round(confidence, 3),
+        evidence=evidence,
+    )
+
+#goal checker.
+def _run_holistic_goal_checker(
+    goal: str,
+    page_state: Optional[Dict[str, Any]],
+    context_sentences: List[str],
+    dom_snapshot: Optional[str],
+) -> CheckerResult:
+    if not dom_snapshot:
+        return CheckerResult(
+            name="holistic",
+            passed=False,
+            confidence=0.0,
+            evidence=[],
+            error="Missing DOM for holistic verifier",
+        )
+
+    context_lines = context_sentences or []
+    context_block = "\n".join(f"- {line}" for line in context_lines) if context_lines else "None recorded."
+    trimmed_dom = dom_snapshot[:20000]
+    state_summary = _format_page_state_summary(page_state)
+    prompt = textwrap.dedent(
+        f"""
+        You are the final goal checker. Examine the full UI state and the recent interaction log holistically.
+
+        Goal: {goal}
+
+        Recent interaction summaries:
+        {context_block}
+
+        Page state snapshot:
+        {state_summary}
+
+        DOM/text snapshot (truncated):
+        {trimmed_dom}
+
+        Decide whether the goal is currently satisfied. Respond with JSON using keys:
+          - "passed": boolean (true if the UI clearly reflects the goal being done).
+          - "confidence": float 0-1.
+          - "evidence": array of 1-4 short strings quoting the exact UI strings you relied on.
+        If the goal is not satisfied, set "passed": false and mention what is missing in "evidence".
+        """
+    ).strip()
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Act as a rigorous goal verifier. Use the provided context + DOM only. Respond with JSON.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+        )
+        raw = response.choices[0].message.content or "{}"
+        payload = _extract_json_object(raw)
+        passed = bool(payload.get("passed"))
+        confidence = payload.get("confidence")
+        try:
+            confidence_value = float(confidence)
+        except (TypeError, ValueError):
+            confidence_value = 0.55 if passed else 0.3
+        evidence_raw = payload.get("evidence") or []
+        evidence = [str(item) for item in evidence_raw if isinstance(item, str)]
+        if passed and not evidence:
+            evidence = ["Holistic verifier: UI appears complete."]
+        return CheckerResult(
+            name="holistic",
+            passed=passed,
+            confidence=max(0.0, min(1.0, confidence_value)),
+            evidence=evidence,
+        )
+    except Exception as exc:
+        return CheckerResult(
+            name="holistic",
+            passed=False,
+            confidence=0.0,
+            evidence=[],
+            error=f"Holistic verifier failed: {exc}",
+        )
+
+
+def _evaluate_goal_state(
+    goal: str,
+    page_state: Optional[Dict[str, Any]],
+    *,
+    dom_snapshot: Optional[str],
+    context_sentences: List[str],
+    threshold: float,
+) -> GoalCheckReport:
+    keywords = _derive_goal_keywords(goal)
+    rule_result = _run_rule_goal_checker(page_state, keywords)
+    holistic_result = _run_holistic_goal_checker(goal, page_state, context_sentences, dom_snapshot)
+
+    results = [rule_result, holistic_result]
+
+    success = holistic_result.passed
+    confidence = holistic_result.confidence
+    reason = "Holistic verifier indicates completion" if success else "Holistic verifier still searching"
+
+    if success and rule_result.passed:
+        blended = (holistic_result.confidence * 0.7) + (rule_result.confidence * 0.3)
+        confidence = min(0.99, blended + 0.05)
+        reason = "Holistic + rule agree"
+    elif success and not rule_result.passed:
+        confidence = min(confidence, 0.78)
+        reason = "Holistic believes goal is done, heuristics remain unconvinced"
+    elif not success and rule_result.passed:
+        reason = "Rule hinted completion, but holistic verifier disagreed"
+        confidence = max(confidence, rule_result.confidence * 0.6)
+
+    reached = success and confidence >= threshold
+    if success and not reached:
+        reason = f"{reason}; confidence {confidence:.2f} below threshold {threshold:.2f}"
+
+    return GoalCheckReport(
+        reached=reached,
+        confidence=round(confidence, 3),
+        threshold=threshold,
+        reason=reason,
+        results=results,
+    )
+
+
+def _log_goal_report(report: GoalCheckReport, *, force: bool = False) -> None:
+    if not GOAL_DEBUG and not force:
+        return
+    vote_heading = "🗳️ Goal checker votes"
+    print(vote_heading)
+    for result in report.results:
+        status = "✅" if result.passed else "❌"
+        summary = result.evidence[0] if result.evidence else result.error or "No evidence"
+        print(f"   {status} {result.name} ({result.confidence:.2f}): {summary}")
+        if GOAL_DEBUG and len(result.evidence) > 1:
+            for extra in result.evidence[1:3]:
+                print(f"      ↳ {extra}")
+    decision_icon = "🏁" if report.reached else "…"  # ellipsis for pending
+    print(f"   {decision_icon} {report.reason} (confidence {report.confidence:.2f} / threshold {report.threshold:.2f})")
+
+
+def _resolve_goal_confidence_threshold(goal: str) -> float:
+    env_override = os.environ.get("PLAYGROUND_GOAL_CONFIDENCE")
+    if env_override:
+        try:
+            value = float(env_override)
+            return max(0.5, min(0.95, value))
+        except ValueError:
+            pass
+    goal_lower = goal.lower()
+    if "create" in goal_lower or "add" in goal_lower:
+        return 0.7
+    return DEFAULT_GOAL_CONFIDENCE
+
+
 @dataclass
 class IntegrationConfig:
    provider: str
@@ -51,6 +632,80 @@ class IntegrationConfig:
    extra_prompt: str = ""
    launch_kwargs: dict = field(default_factory=dict)
 DEFAULT_INTEGRATIONS: Dict[str, IntegrationConfig] = {}
+
+
+def _slugify_label(label: str, max_tokens: int = 5) -> str:
+   tokens = [tok for tok in re.split(r"\W+", label.lower()) if tok]
+   if not tokens:
+       return "target"
+   return "_".join(tokens[:max_tokens])
+
+
+def _highlight_locator(locator, color: str = HIGHLIGHT_BORDER_COLOR) -> bool:
+   try:
+       locator.scroll_into_view_if_needed(timeout=2000)
+   except Exception:
+       pass
+
+   try:
+       locator.evaluate(
+           """(element, data) => {
+               if (!element) {
+                   return;
+               }
+               if (typeof element.scrollIntoView === 'function') {
+                   element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+               }
+               if (!element.__codexHighlightData) {
+                   element.__codexHighlightData = {
+                       outline: element.style.outline || '',
+                       boxShadow: element.style.boxShadow || '',
+                       transition: element.style.transition || ''
+                   };
+               }
+               element.style.transition = 'outline 0.12s ease, box-shadow 0.12s ease';
+               element.style.outline = `3px solid ${data.color}`;
+               element.style.boxShadow = `0 0 0 3px ${data.color}55`;
+           }""",
+           {"color": color},
+       )
+       return True
+   except Exception as exc:
+       print(f"  • Failed to apply highlight: {exc}")
+       return False
+
+
+def _clear_highlight(locator) -> None:
+   try:
+       locator.evaluate(
+           """(element) => {
+               if (!element || !element.__codexHighlightData) {
+                   return;
+               }
+               const data = element.__codexHighlightData;
+               element.style.outline = data.outline;
+               element.style.boxShadow = data.boxShadow;
+               element.style.transition = data.transition;
+               delete element.__codexHighlightData;
+           }"""
+       )
+   except Exception:
+       pass
+
+
+def _capture_action_screenshot(page, label: str, action: str = "click") -> Optional[str]:
+   global ACTION_SNAPSHOT_COUNTER
+   try:
+       ACTION_SNAPSHOT_COUNTER += 1
+       slug = _slugify_label(f"{action}_{label}")
+       timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S-%f")
+       SCREENSHOT_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+       path = SCREENSHOT_OUTPUT_DIR / f"step{ACTION_SNAPSHOT_COUNTER:02d}_{slug}_{timestamp}.png"
+       page.screenshot(path=str(path), full_page=True)
+       return str(path)
+   except Exception as exc:
+       print(f"  • Action screenshot failed: {exc}")
+       return None
 
 
 
@@ -500,8 +1155,24 @@ def _attempt_click(
                continue
            target = locator.first
            target.wait_for(state="visible", timeout=10000)
-           target.click(timeout=10000)
-           return True, f"Clicked via {desc}"
+           highlight_applied = False
+           try:
+               highlight_applied = _highlight_locator(target)
+               if highlight_applied:
+                   try:
+                       page.wait_for_timeout(150)
+                   except Exception:
+                       pass
+               screenshot_path = _capture_action_screenshot(page, label, action="click")
+               if screenshot_path:
+                   print(f"    📸 Highlight screenshot saved: {screenshot_path}")
+               target.click(timeout=10000)
+               return True, f"Clicked via {desc}"
+           except Exception as exc:
+               last_error = str(exc)
+           finally:
+               if highlight_applied:
+                   _clear_highlight(target)
        except Exception as exc:
            last_error = str(exc)
    return False, f"All strategies failed. Last error: {last_error}"
@@ -1202,6 +1873,7 @@ def main() -> None:
    goal = _resolve_goal()
    print(f"🎯 Goal: {goal}")
 
+   goal_confidence_threshold = _resolve_goal_confidence_threshold(goal)
 
    try:
        provider, action = parse_intent(goal)
@@ -1229,12 +1901,10 @@ def main() -> None:
    try:
        playwright, context, page = launch_persistent(config.base_url, config.profile_dir, headless=headless)
 
-
        try:
            page.wait_for_load_state("networkidle", timeout=10000)
        except PWTimeoutError:
            pass
-
 
        runtime_config = replace(config)
        try:
@@ -1253,10 +1923,26 @@ def main() -> None:
                print(f"🧠 Using fallback control hints: {runtime_config.label_hints}")
 
 
+       reset_interaction_context_memory()
        history: List[ActionRecord] = []
+       latest_goal_report: Optional[GoalCheckReport] = None
        for step_idx in range(1, MAX_ACTIONS + 1):
            try:
                page_state = _summarize_page_state(page)
+               dom_snapshot = page_state.get("dom_snippet") or get_latest_dom_snapshot()
+               context_sentences = get_recent_context_sentences(limit=6)
+               latest_goal_report = _evaluate_goal_state(
+                   goal,
+                   page_state,
+                   dom_snapshot=dom_snapshot,
+                   context_sentences=context_sentences,
+                   threshold=goal_confidence_threshold,
+               )
+               _log_goal_report(latest_goal_report, force=latest_goal_report.reached)
+               if latest_goal_report.reached:
+                   print(f"🏁 Goal checker declared success: {latest_goal_report.reason}")
+                   break
+
                plan = _plan_next_action(page, goal, action, runtime_config, history, page_state=page_state)
            except RuntimeError as exc:
                print(f"❌ Planner failure: {exc}")
@@ -1264,8 +1950,10 @@ def main() -> None:
 
 
            if plan.get("finish"):
-               print(f"🎉 Planner marked goal complete: {plan.get('reason', 'done')}")
-               break
+               if latest_goal_report and latest_goal_report.reached:
+                   print(f"🎉 Planner agrees with goal checker: {plan.get('reason', 'done')}")
+                   break
+               print("⚠️ Planner marked goal complete, but goal checker still uncertain. Continuing…")
 
 
            targets = plan.get("targets") or []
@@ -1357,6 +2045,18 @@ def main() -> None:
                            message=message,
                            state=state_snapshot,
                        )
+                   )
+
+                   _record_interaction_context(
+                       action_kind=action_kind,
+                       label=label,
+                       typed_text=type_text_value if action_kind == "type" else None,
+                       success=success,
+                       message=message,
+                       progress=progress,
+                       progress_reason=progress_reason,
+                       updated_state=updated_state,
+                       fallback_state=page_state,
                    )
 
                    outcome_icon = "✅" if success else "⚠️"
