@@ -354,8 +354,7 @@ OVERLAY_LOCATORS = [
 ]
 
 client = OpenAI()
-DEFAULT_GOAL = "change the language to french in notion"  #EDIT THIS WHEN TESTING AND WHAT NOT
-DEFAULT_GOAL = "change the language in notion to french"
+DEFAULT_GOAL = "create a new project in asana"  #EDIT THIS WHEN TESTING AND WHAT NOT
 MAX_ACTIONS = 12
 ACTION_SNAPSHOT_COUNTER = 0
 HIGHLIGHT_BORDER_COLOR = "#ff9800"

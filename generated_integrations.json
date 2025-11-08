@@ -38,6 +38,48 @@
       ]
     }
   },
+  "asana": {
+    "action_snapshot": "create_project",
+    "config": {
+      "base_url": "https://app.asana.com/0/home",
+      "extra_prompt": "Ensure to check for any pop-up modals that may require user interaction before proceeding.",
+      "label_hints": [
+        "Create Project",
+        "Add Task",
+        "Project Name",
+        "Due Date",
+        "Assign",
+        "Sections",
+        "Collaborators"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "asana_profile"
+    },
+    "generated_at": "2025-11-08T20:02:06.418260+00:00",
+    "goal_snapshot": "create a new project in asana",
+    "search": {
+      "alternate_urls": [
+        "https://asana.com/guide",
+        "https://asana.com/guide/help/projects/create",
+        "https://asana.com/guide/help/faq"
+      ],
+      "login_hint": "Users authenticate using email and password or via single sign-on (SSO) if enabled.",
+      "notes": "Ensure to check for any pop-up modals that may require user interaction before proceeding.",
+      "primary_url": "https://app.asana.com/0/home",
+      "profile_hint": "asana_profile",
+      "ui_keywords": [
+        "Create Project",
+        "Add Task",
+        "Project Name",
+        "Due Date",
+        "Assign",
+        "Sections",
+        "Collaborators"
+      ]
+    }
+  },
   "inar": {
     "action_snapshot": "create_project",
     "config": {
