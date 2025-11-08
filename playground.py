@@ -1455,13 +1455,13 @@ def _make_input_locators(label: str, hints: Optional[List[str]] = None) -> List[
 
 
 
-def _attempt_dropdown_click(page, label: str, exact: bool = True) -> tuple[bool, str]:
+def _attempt_dropdown_click(page, label: str, exact: bool = True) -> tuple[bool, str, Optional[str]]:
    """
    Try to select a visible option inside an open dropdown/listbox.
    """
    label = label.strip()
    if not label:
-       return False, "Dropdown selection skipped: empty label."
+       return False, "Dropdown selection skipped: empty label.", None
 
    attempts: List[tuple[str, Callable]] = [
        ("menu role=menuitem", lambda: page.locator("[role='menu']").get_by_role("menuitem", name=label, exact=exact)),
@@ -1471,6 +1471,7 @@ def _attempt_dropdown_click(page, label: str, exact: bool = True) -> tuple[bool,
    ]
 
    last_error = "Dropdown selectors not found."
+   captured_screenshot: Optional[str] = None
    for desc, builder in attempts:
        try:
            locator = builder()
@@ -1483,11 +1484,28 @@ def _attempt_dropdown_click(page, label: str, exact: bool = True) -> tuple[bool,
                continue
            target = locator.first
            target.wait_for(state="visible", timeout=5000)
-           target.click(timeout=5000)
-           return True, f"Selected dropdown option via {desc}"
+           highlight_applied = False
+           try:
+               highlight_applied = _highlight_locator(target)
+               if highlight_applied:
+                   try:
+                       page.wait_for_timeout(150)
+                   except Exception:
+                       pass
+               screenshot_path = _capture_action_screenshot(page, label, action="select")
+               if screenshot_path:
+                   captured_screenshot = screenshot_path
+                   print(f"    📸 Dropdown screenshot saved: {screenshot_path}")
+               target.click(timeout=5000)
+               return True, f"Selected dropdown option via {desc}", captured_screenshot
+           except Exception as exc:
+               last_error = str(exc)
+           finally:
+               if highlight_applied:
+                   _clear_highlight(target)
        except Exception as exc:
            last_error = str(exc)
-   return False, last_error
+   return False, last_error, captured_screenshot
 
 
 
@@ -1510,7 +1528,11 @@ def _attempt_click(
    if page_state and page_state.get("dropdown_open"):
        hint_set = {hint.lower() for hint in (hints or [])}
        dropdown_exact = "fuzzy" not in hint_set
-       success, dropdown_msg = _attempt_dropdown_click(page, label, exact=dropdown_exact)
+       success, dropdown_msg, dropdown_screenshot = _attempt_dropdown_click(
+           page, label, exact=dropdown_exact
+       )
+       if dropdown_screenshot:
+           captured_screenshot = dropdown_screenshot
        if success:
            return True, dropdown_msg, captured_screenshot
        last_error = dropdown_msg

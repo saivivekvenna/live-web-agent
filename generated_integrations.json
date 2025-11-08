@@ -38,6 +38,84 @@
       ]
     }
   },
+  "inar": {
+    "action_snapshot": "create_project",
+    "config": {
+      "base_url": "https://inar.com/dashboard",
+      "extra_prompt": "Log in using your email and password. Consider enabling two-factor authentication for added security.",
+      "label_hints": [
+        "Create Project",
+        "Dashboard",
+        "Settings",
+        "User Profile",
+        "Help",
+        "Logout"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "inar_user_profile"
+    },
+    "generated_at": "2025-11-08T06:58:49.302252+00:00",
+    "goal_snapshot": "show me how to create a project inar",
+    "search": {
+      "alternate_urls": [
+        "https://inar.com/docs/getting-started",
+        "https://inar.com/support"
+      ],
+      "login_hint": "Use your email and password to log in; consider enabling two-factor authentication for added security.",
+      "notes": "The layout may vary slightly on mobile devices; ensure to check responsive design elements.",
+      "primary_url": "https://inar.com/dashboard",
+      "profile_hint": "inar_user_profile",
+      "ui_keywords": [
+        "Create Project",
+        "Dashboard",
+        "Settings",
+        "User Profile",
+        "Help",
+        "Logout"
+      ]
+    }
+  },
+  "inllinear": {
+    "action_snapshot": "create_project",
+    "config": {
+      "base_url": "https://www.inllinear.com/dashboard",
+      "extra_prompt": "Log in using your email and password. Consider enabling two-factor authentication for added security.",
+      "label_hints": [
+        "Create Project",
+        "Dashboard",
+        "Settings",
+        "User Profile",
+        "Help",
+        "Logout"
+      ],
+      "launch_kwargs": {
+        "headless": true
+      },
+      "profile_hint": "inllinear_profile"
+    },
+    "generated_at": "2025-11-08T07:00:57.648416+00:00",
+    "goal_snapshot": "show me how to create a project inllinear",
+    "search": {
+      "alternate_urls": [
+        "https://www.inllinear.com/docs/getting-started",
+        "https://www.inllinear.com/support"
+      ],
+      "login_hint": "Use your email and password to log in; consider enabling two-factor authentication for added security.",
+      "notes": "Ensure to check the browser compatibility; some features may not work on older versions.",
+      "primary_url": "https://www.inllinear.com/dashboard",
+      "profile_hint": "inllinear_profile",
+      "ui_keywords": [
+        "Create Project",
+        "Dashboard",
+        "Settings",
+        "User Profile",
+        "Help",
+        "Logout"
+      ]
+    }
+  },
   "linear": {
     "action_snapshot": "create_project",
     "config": {
