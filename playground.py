@@ -1,4 +1,5 @@
 
+import html
 import json
 import os
 import re
@@ -722,7 +723,7 @@ def _capture_prioritized_dom(page, limit: int = 30000) -> str:
                continue
            for idx in range(count):
                try:
-                   snippet = locator.nth(idx).inner_html(timeout=2000)
+                   snippet = locator.nth(idx).evaluate("node => node.outerHTML")
                except Exception as exc:
                    print(f"  • Overlay capture failed for {desc}[{idx}]: {exc}")
                    continue
@@ -758,6 +759,26 @@ def _overlay_present(page) -> bool:
    return False
 
 
+def _locator_has_any(page, selector: str) -> bool:
+   """Return True if the selector matches at least one element."""
+   try:
+       return page.locator(selector).count() > 0
+   except Exception:
+       return False
+
+
+def _render_dropdown_fragment(options: List[str]) -> str:
+   """Return synthetic markup that mirrors the currently open dropdown/listbox."""
+   parts = [
+       "<div data-agent='dropdown-preview' role='listbox' aria-label='Detected dropdown options'>"
+   ]
+   for idx, option in enumerate(options):
+       label = html.escape(option.strip())
+       if not label:
+           continue
+       parts.append(f"<div role='option' data-agent-option='{idx}'>{label}</div>")
+   parts.append("</div>")
+   return "".join(parts)
 
 
 def _looks_like_dashboard(page, home_url: Optional[str] = None) -> bool:
@@ -821,13 +842,27 @@ def _summarize_page_state(
 
    def _collect_text_list(selector: str, max_items: int = 8) -> List[str]:
        try:
-           expr = (
-               f"(els) => Array.from(els)"
-               f".map(el => (el.innerText || '').trim())"
-               f".filter(Boolean)"
-               f".slice(0, {max_items})"
-           )
-           items = page.eval_on_selector_all(selector, expr)
+           expr = """
+               (els, maxItems) => Array.from(els)
+                   .map((el) => {
+                       const primary = (el.innerText || el.textContent || '').trim();
+                       if (primary) {
+                           return primary;
+                       }
+                       const aria = (el.getAttribute('aria-label') || '').trim();
+                       if (aria) {
+                           return aria;
+                       }
+                       const title = (el.getAttribute('title') || '').trim();
+                       if (title) {
+                           return title;
+                       }
+                       return '';
+                   })
+                   .filter(Boolean)
+                   .slice(0, maxItems)
+           """
+           items = page.eval_on_selector_all(selector, expr, max_items)
            if isinstance(items, list):
                return [str(item) for item in items if isinstance(item, str)]
        except Exception:
@@ -846,18 +881,63 @@ def _summarize_page_state(
        "[role='listbox'] [role='option'], [role='listbox'] [role='menuitem'], [role='listbox'] button, [role='listbox'] a",
        max_items=10,
    )
+   menu_present = _locator_has_any(page, "[role='menu']")
+   listbox_present = _locator_has_any(page, "[role='listbox']")
    state["menu_options"] = menu_items
    state["listbox_options"] = listbox_items
    dropdown_options = (menu_items + listbox_items)[:10]
    state["dropdown_options"] = dropdown_options
-   state["menu_open"] = bool(menu_items)
-   state["listbox_open"] = bool(listbox_items)
-   state["dropdown_open"] = bool(dropdown_options)
+   state["menu_open"] = menu_present or bool(menu_items)
+   state["listbox_open"] = listbox_present or bool(listbox_items)
+   state["dropdown_open"] = state["menu_open"] or state["listbox_open"] or bool(dropdown_options)
 
    dom_snapshot = _capture_prioritized_dom(page, limit=dom_limit)
+   if state["dropdown_open"] and dropdown_options:
+       synthetic_fragment = _render_dropdown_fragment(dropdown_options)
+       dom_snapshot = f"{synthetic_fragment}\n{dom_snapshot}" if dom_snapshot else synthetic_fragment
    state["dom_snippet"] = dom_snapshot
    state["dom_excerpt"] = dom_snapshot[:excerpt_limit] if dom_snapshot else ""
    return state
+
+
+def _capture_page_state_with_retries(
+   page,
+   *,
+   baseline_state: Optional[Dict[str, Any]],
+   dom_limit: int = 12000,
+   excerpt_limit: int = 1200,
+   retries: int = 2,
+   wait_ms: int = 250,
+) -> tuple[Dict[str, Any], bool, str]:
+   """
+   Capture the updated page state, retrying briefly so dropdowns/menus can render.
+   Returns (state, progress_detected, progress_reason).
+   """
+   attempts = max(0, retries) + 1
+   last_state: Dict[str, Any] = {}
+   last_reason = "DOM excerpt unchanged"
+   for attempt in range(attempts):
+       try:
+           current_state = _summarize_page_state(page, dom_limit=dom_limit, excerpt_limit=excerpt_limit)
+       except Exception as exc:
+           print(f"  • Page state capture failed (attempt {attempt + 1}): {exc}")
+           current_state = {}
+       last_state = current_state or last_state
+       if not baseline_state:
+           return current_state, True, "No baseline to compare"
+       if current_state:
+           progress, reason = _detect_progress(baseline_state, current_state)
+       else:
+           progress, reason = False, "Missing updated state"
+       if progress:
+           return current_state, True, reason
+       last_reason = reason
+       if attempt < attempts - 1:
+           try:
+               page.wait_for_timeout(wait_ms)
+           except Exception:
+               break
+   return last_state or {}, False, last_reason
 
 
 def _failure_history_digest(history: List[ActionRecord], limit: int = 5) -> List[Dict[str, Any]]:
@@ -981,6 +1061,22 @@ def _make_label_locators(label: str, hints: Optional[List[str]] = None) -> List[
    def overlay_text(page, label=label, exact=prefers_exact):
        return page.locator("[role='dialog']").get_by_text(label, exact=exact)
 
+   def label_row_control(page, label=label, exact=prefers_exact):
+       base = page.get_by_text(label, exact=exact)
+       row = base.locator("xpath=ancestor::*[self::div or self::section or self::li or self::tr or self::dd or self::dt][1]")
+       control_selector = ":is(button, [role='button'], [role='combobox'], [role='switch'], [role='menuitem'], [role='option'], select)"
+       return row.locator(control_selector)
+
+   def container_control(page, label=label, exact=prefers_exact):
+       search_space = page.locator(":is(div, section, li, label, form, tr, table, article, dd, dt)")
+       flags = 0 if exact else re.IGNORECASE
+       try:
+           pattern = re.compile(rf"\b{re.escape(label)}\b", flags)
+       except re.error:
+           pattern = re.compile(re.escape(label), flags)
+       scope = search_space.filter(has_text=pattern)
+       control_selector = ":is(button, [role='button'], [role='combobox'], [role='switch'], [role='menuitem'], [role='option'])"
+       return scope.locator(control_selector).first
 
    def role_button(page, label=label, exact=prefers_exact):
        return page.get_by_role("button", name=label, exact=exact)
@@ -1016,7 +1112,12 @@ def _make_label_locators(label: str, hints: Optional[List[str]] = None) -> List[
    if include_dialog:
        add(f"dialog role=button[{label}]", overlay_button)
        add(f"dialog role=menuitem[{label}]", overlay_menuitem)
+       add(f"dialog row control near '{label}'", label_row_control)
+       add(f"dialog control near '{label}'", container_control)
        add(f"dialog text~='{label}'", overlay_text)
+   else:
+       add(f"row control near '{label}'", label_row_control)
+       add(f"control near '{label}'", container_control)
 
 
    add(f"role=button[{label}]", role_button)
@@ -2021,14 +2122,12 @@ def main() -> None:
                            clear_first=type_clear_first,
                            press_enter=type_press_enter,
                        )
-                   try:
-                       updated_state = _summarize_page_state(
-                           page, dom_limit=12000, excerpt_limit=1200
-                       )
-                   except Exception:
-                       updated_state = {}
-
-                   progress, progress_reason = _detect_progress(page_state, updated_state)
+                   updated_state, progress, progress_reason = _capture_page_state_with_retries(
+                       page,
+                       baseline_state=page_state,
+                       dom_limit=12000,
+                       excerpt_limit=1200,
+                   )
                    if success and not progress:
                        success = False
                        message = f"No observable change: {progress_reason}"
